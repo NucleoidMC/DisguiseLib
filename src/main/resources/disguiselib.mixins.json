@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "org.samo_lego.disguiselib.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "EntityMixin_Disguise",
+    "ServerPlayNetworkHandlerMixin_Disguiser",
+    "accessor.EntitiesDestroyS2CPacketAccessor",
+    "accessor.EntitySpawnS2CPacketAccessor",
+    "accessor.MobSpawnS2CPacketAccessor",
+    "accessor.PlayerListS2CPacketAccessor",
+    "accessor.PlayerSpawnS2CPacketAccessor"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
