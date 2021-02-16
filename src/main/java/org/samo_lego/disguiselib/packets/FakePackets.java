@@ -14,6 +14,11 @@ import org.samo_lego.disguiselib.mixin.accessor.PlayerSpawnS2CPacketAccessor;
 
 public class FakePackets {
 
+    /**
+     * Constructs a fake {@link MobSpawnS2CPacket} for the given entity.
+     * @param entity entity that requires fake packet
+     * @return fake {@link MobSpawnS2CPacket}
+     */
     public static MobSpawnS2CPacket fakeMobSpawnS2CPacket(Entity entity) {
         MobSpawnS2CPacket packet = new MobSpawnS2CPacket();
 
@@ -42,6 +47,11 @@ public class FakePackets {
         return packet;
     }
 
+    /**
+     * Constructs a fake {@link EntitySpawnS2CPacket} for the given entity.
+     * @param entity entity that requires fake packet
+     * @return fake {@link EntitySpawnS2CPacket}
+     */
     public static EntitySpawnS2CPacket fakeEntitySpawnS2CPacket(Entity entity) {
         EntitySpawnS2CPacket packet = new EntitySpawnS2CPacket(entity);
         ((EntitySpawnS2CPacketAccessor) packet).setEntityType(((EntityDisguise) entity).getDisguiseType());
@@ -49,6 +59,14 @@ public class FakePackets {
         return packet;
     }
 
+    /**
+     * Constructs a fake {@link PlayerSpawnS2CPacket} for the given entity.
+     * Make sure you send the {@link net.minecraft.network.packet.s2c.play.PlayerListS2CPacket} as well
+     * if you're using this for yourself!
+     *
+     * @param entity entity that requires fake packet
+     * @return fake {@link PlayerSpawnS2CPacket}
+     */
     public static PlayerSpawnS2CPacket fakePlayerSpawnS2CPacket(Entity entity) {
         PlayerSpawnS2CPacket packet = new PlayerSpawnS2CPacket();
         PlayerSpawnS2CPacketAccessor accessor = (PlayerSpawnS2CPacketAccessor) packet;
