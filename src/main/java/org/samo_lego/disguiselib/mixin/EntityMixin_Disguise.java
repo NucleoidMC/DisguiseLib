@@ -7,14 +7,21 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.server.PlayerManager;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import org.samo_lego.disguiselib.EntityDisguise;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -90,6 +97,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     @Override
     public void removeDisguise() {
         this.disguiseAs(this.getType());
+        this.disguised = false;
     }
 
     /**
@@ -108,5 +116,45 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     @Override
     public boolean disguiseAlive() {
         return this.disguiseAlive;
+    }
+
+    /**
+     * Takes care of loading the fake entity data from tag.
+     * @param tag
+     * @param ci
+     */
+    @Inject(
+            method = "fromTag(Lnet/minecraft/nbt/CompoundTag;)V",
+            at = @At("TAIL")
+    )
+    private void fromTag(CompoundTag tag, CallbackInfo ci) {
+        CompoundTag disguiseTag = (CompoundTag) tag.get("DisguiseLib");
+
+        if(disguiseTag != null) {
+            this.disguised = true;
+            Identifier disguiseTypeId = new Identifier(disguiseTag.getString("DisguiseType"));
+            this.disguiseType = Registry.ENTITY_TYPE.get(disguiseTypeId);
+            this.disguiseAlive = disguiseTag.getBoolean("DisguiseAlive");
+        }
+    }
+
+    /**
+     * Takes care of saving the fake entity data to tag.
+     * @param tag
+     * @param cir
+     */
+    @Inject(
+            method = "toTag(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/nbt/CompoundTag;",
+            at = @At("TAIL")
+    )
+    private void toTag(CompoundTag tag, CallbackInfoReturnable<CompoundTag> cir) {
+        if(this.disguised) {
+            CompoundTag disguiseTag = new CompoundTag();
+
+            disguiseTag.putString("DisguiseType", Registry.ENTITY_TYPE.getId(this.disguiseType).toString());
+            disguiseTag.putBoolean("DisguiseAlive", this.disguiseAlive);
+
+            tag.put("DisguiseLib", disguiseTag);
+        }
     }
 }
