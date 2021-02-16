@@ -13,10 +13,10 @@ repositories {
 
 dependencies {
   // By version tag
-  modImplementation 'com.github.samolego:DisguiseLib:VERSION_TAG'
+  modImplementation 'com.github.NucleoidMC:DisguiseLib:VERSION_TAG'
   
   // Or by branch
-  modImplementation 'com.github.samolego:DisguiseLib:master-SNAPSHOT'
+  modImplementation 'com.github.NucleoidMC:DisguiseLib:-SNAPSHOT'
 }
 ```
 # API

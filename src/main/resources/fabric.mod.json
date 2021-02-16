@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "DisguiseLib",
+  "id": "disguiselib",
   "version": "${version}",
 
   "name": "Disguise Library",
