@@ -6,7 +6,7 @@ import xyz.nucleoid.disguiselib.command.DisguiseCommand;
 
 public class DisguiseLib implements ModInitializer {
 
-	public static final String MODID = "DisguiseLib";
+	public static final String MODID = "disguiselib";
 
 	@Override
 	public void onInitialize() {
