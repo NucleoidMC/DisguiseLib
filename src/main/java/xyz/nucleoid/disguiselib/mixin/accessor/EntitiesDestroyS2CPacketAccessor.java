@@ -1,4 +1,4 @@
-package org.samo_lego.disguiselib.mixin.accessor;
+package xyz.nucleoid.disguiselib.mixin.accessor;
 
 import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;

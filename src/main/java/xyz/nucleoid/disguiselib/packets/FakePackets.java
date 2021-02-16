@@ -1,4 +1,4 @@
-package org.samo_lego.disguiselib.packets;
+package xyz.nucleoid.disguiselib.packets;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
@@ -7,10 +7,10 @@ import net.minecraft.network.packet.s2c.play.PlayerSpawnS2CPacket;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
-import org.samo_lego.disguiselib.EntityDisguise;
-import org.samo_lego.disguiselib.mixin.accessor.EntitySpawnS2CPacketAccessor;
-import org.samo_lego.disguiselib.mixin.accessor.MobSpawnS2CPacketAccessor;
-import org.samo_lego.disguiselib.mixin.accessor.PlayerSpawnS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.mixin.accessor.PlayerSpawnS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.EntityDisguise;
+import xyz.nucleoid.disguiselib.mixin.accessor.EntitySpawnS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.mixin.accessor.MobSpawnS2CPacketAccessor;
 
 public class FakePackets {
 

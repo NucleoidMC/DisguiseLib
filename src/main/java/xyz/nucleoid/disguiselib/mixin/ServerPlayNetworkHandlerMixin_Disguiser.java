@@ -1,4 +1,4 @@
-package org.samo_lego.disguiselib.mixin;
+package xyz.nucleoid.disguiselib.mixin;
 
 import com.mojang.authlib.GameProfile;
 import io.netty.util.concurrent.Future;
@@ -11,7 +11,9 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
-import org.samo_lego.disguiselib.EntityDisguise;
+import xyz.nucleoid.disguiselib.mixin.accessor.*;
+import xyz.nucleoid.disguiselib.packets.FakePackets;
+import xyz.nucleoid.disguiselib.EntityDisguise;
 import org.samo_lego.disguiselib.mixin.accessor.*;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,10 +21,9 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import xyz.nucleoidmc.disguiselib.mixin.accessor.*;
 
 import java.util.Collections;
-
-import static org.samo_lego.disguiselib.packets.FakePackets.*;
 
 @Mixin(ServerPlayNetworkHandler.class)
 public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
@@ -95,7 +96,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             listS2CPacketAccessor.setEntries(Collections.singletonList(packet.new Entry(profile, 0, GameMode.SURVIVAL, entity.getName())));
 
             this.sendPacket(packet);
-            this.sendPacket(fakePlayerSpawnS2CPacket(entity));
+            this.sendPacket(FakePackets.fakePlayerSpawnS2CPacket(entity));
 
         } else {
             PlayerListS2CPacket listPacket = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
@@ -104,9 +105,9 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
 
             this.sendPacket(listPacket);
             if(disguise.disguiseAlive()) {
-                this.sendPacket(fakeMobSpawnS2CPacket(entity));
+                this.sendPacket(FakePackets.fakeMobSpawnS2CPacket(entity));
             } else {
-                this.sendPacket(fakeEntitySpawnS2CPacket(entity));
+                this.sendPacket(FakePackets.fakeEntitySpawnS2CPacket(entity));
             }
         }
 

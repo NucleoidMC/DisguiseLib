@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "DisguiseLib",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Disguise Library",
+  "description": "A (server-side) library for disguising entities in Minecraft.",
   "authors": [
-    "Me!"
+    "samo_lego"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://nucleoid.xyz/",
+    "sources": "https://github.com/NucleoidMC/DisguiseLib"
   },
 
   "license": "CC0-1.0",
@@ -19,7 +19,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "org.samo_lego.disguiselib.DisguiseLib"
+      "xyz.nucleoid.disguiselib.DisguiseLib"
     ]
   },
   "mixins": [

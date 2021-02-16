@@ -1,4 +1,4 @@
-package org.samo_lego.disguiselib;
+package xyz.nucleoid.disguiselib;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;

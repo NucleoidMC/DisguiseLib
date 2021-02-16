@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "org.samo_lego.disguiselib.mixin",
+  "package": "xyz.nucleoid.disguiselib.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "EntityMixin_Disguise",

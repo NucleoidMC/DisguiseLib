@@ -1,4 +1,4 @@
-package org.samo_lego.disguiselib.command;
+package xyz.nucleoid.disguiselib.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -16,16 +16,16 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.registry.Registry;
-import org.samo_lego.disguiselib.EntityDisguise;
+import xyz.nucleoid.disguiselib.EntityDisguise;
 
 import java.util.Optional;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.greedyString;
 import static net.minecraft.command.argument.EntityArgumentType.entity;
-import static net.minecraft.entity.EntityType.FISHING_BOBBER;
-import static net.minecraft.entity.EntityType.ITEM;
+import static net.minecraft.entity.EntityType.*;
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
+import static xyz.nucleoid.disguiselib.DisguiseLib.MODID;
 
 public class DisguiseCommand {
 
@@ -65,9 +65,9 @@ public class DisguiseCommand {
 
     static {
         DISGUISES = SuggestionProviders.register(
-                new Identifier("taterzens", "entites"),
+                new Identifier(MODID, "entites"),
                 (context, builder) ->
-                        CommandSource.suggestFromIdentifier(Registry.ENTITY_TYPE.stream().filter(type -> type != FISHING_BOBBER || type != ITEM), builder, EntityType::getId,
+                        CommandSource.suggestFromIdentifier(Registry.ENTITY_TYPE.stream().filter(type -> type != FISHING_BOBBER || type != ITEM || type != FALLING_BLOCK), builder, EntityType::getId,
                                 (entityType) -> new TranslatableText(Util.createTranslationKey("entity", EntityType.getId(entityType)))
                         )
         );
