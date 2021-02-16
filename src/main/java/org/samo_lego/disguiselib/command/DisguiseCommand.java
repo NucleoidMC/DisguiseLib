@@ -44,7 +44,9 @@ public class DisguiseCommand {
         );
     }
 
-    private static int clearDisguise(CommandContext<ServerCommandSource> ctx) {
+    private static int clearDisguise(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
+        Entity entity = EntityArgumentType.getEntity(ctx, "target");
+        ((EntityDisguise) entity).removeDisguise();
         return 0;
     }
 
