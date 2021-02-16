@@ -11,14 +11,16 @@ import net.minecraft.command.suggestion.SuggestionProviders;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.registry.Registry;
 import org.samo_lego.disguiselib.EntityDisguise;
 
+import java.util.Optional;
+
 import static com.mojang.brigadier.arguments.StringArgumentType.greedyString;
-import static com.mojang.brigadier.arguments.StringArgumentType.word;
 import static net.minecraft.command.argument.EntityArgumentType.entity;
 import static net.minecraft.entity.EntityType.FISHING_BOBBER;
 import static net.minecraft.entity.EntityType.ITEM;
@@ -53,9 +55,11 @@ public class DisguiseCommand {
     private static int setDisguise(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         Entity entity = EntityArgumentType.getEntity(ctx, "target");
         String disguise = StringArgumentType.getString(ctx, "disguise");
-
-        ((EntityDisguise) entity).disguiseAs(new Identifier(disguise));
-
+        Optional<EntityType<?>> optionalType = EntityType.get(disguise);
+        if(optionalType.isPresent())
+            ((EntityDisguise) entity).disguiseAs(optionalType.get());
+        else
+            ctx.getSource().sendError(new LiteralText("Invalid entity id!"));
         return 0;
     }
 

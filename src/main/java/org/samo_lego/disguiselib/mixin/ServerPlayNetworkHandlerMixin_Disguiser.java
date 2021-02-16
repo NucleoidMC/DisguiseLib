@@ -27,11 +27,17 @@ import static org.samo_lego.disguiselib.packets.FakePackets.*;
 @Mixin(ServerPlayNetworkHandler.class)
 public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
     @Shadow public ServerPlayerEntity player;
-    @Unique
-    private boolean skipCheck;
-
+    @Unique private boolean skipCheck;
     @Shadow public abstract void sendPacket(Packet<?> packet);
 
+    /**
+     * Checks the packet that was sent. If the entity in the packet is disguised, the
+     * entity type in the packet will be changed.
+     *
+     * @param packet packet being sent
+     * @param listener
+     * @param ci
+     */
     @Inject(
             method = "sendPacket(Lnet/minecraft/network/Packet;Lio/netty/util/concurrent/GenericFutureListener;)V",
             at = @At(
@@ -66,6 +72,10 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
         }
     }
 
+    /**
+     * Sends fake packet instead of the real one
+     * @param entity the entity that is disguised and needs to have a custom packet sent.
+     */
     @Unique
     private void sendFakePacket(Entity entity) {
         EntityDisguise disguise = (EntityDisguise) entity;

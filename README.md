@@ -24,14 +24,15 @@ dependencies {
 Use the provided interface `EntityDisguise` on any class extending `net.minecraft.entity.Entity`.
 
 ```java
-/* Disguising */
-// Disguises as creeper, true is if the Creeper class extends LivingEntity
-((EntityDisguise) entity).disguiseAs(EntityType.CREEPER, true);
+// Disguises as creeper
+((EntityDisguise) entity).disguiseAs(EntityType.CREEPER);
 
-// Disguising using Identifier
-((EntityDisguise) entity).disguiseAs(new Identifier("minecraft", "player")); // Disguising entity as player
         
 ((EntityDisguise) entity).isDisguised(); // Tells whether entity is disguised or not
-((EntityDisguise) entity).removeDisguise(); // Removes disguise
+((EntityDisguise) entity).removeDisguise(); // Clears the disguise
+
+// Not that useful (mainly for internal use)
+((EntityDisguise) entity).getDisguiseType(); // Gets the EntityType of the disguise
+((EntityDisguise) entity).disguiseAlive(); // Whether the entity from the disguise is an instance of LivingEntity
 ```
 
