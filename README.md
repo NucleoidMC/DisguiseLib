@@ -27,6 +27,10 @@ Use the provided interface `EntityDisguise` on any class extending `net.minecraf
 // Disguises as creeper
 ((EntityDisguise) entity).disguiseAs(EntityType.CREEPER);
 
+// Disguise as aCustomEntity (net.minecraft.entity)
+((EntityDisguise) entity).disguiseAs(aCustomEntity);
+
+
         
 ((EntityDisguise) entity).isDisguised(); // Tells whether entity is disguised or not
 ((EntityDisguise) entity).removeDisguise(); // Clears the disguise

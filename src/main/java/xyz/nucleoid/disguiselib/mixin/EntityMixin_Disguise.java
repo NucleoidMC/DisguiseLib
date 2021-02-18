@@ -133,8 +133,9 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
      *
      * @return disguise entity or null if there's no disguise
      */
+    @Nullable
     @Override
-    public @Nullable Entity getDisguiseEntity() {
+    public Entity getDisguiseEntity() {
         return this.disguiselib$disguiseEntity;
     }
 
@@ -164,6 +165,10 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             Identifier disguiseTypeId = new Identifier(disguiseTag.getString("DisguiseType"));
             this.disguiselib$disguiseType = Registry.ENTITY_TYPE.get(disguiseTypeId);
             this.disguiselib$disguiseAlive = disguiseTag.getBoolean("DisguiseAlive");
+
+            CompoundTag disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
+            if(!disguiseEntityTag.isEmpty())
+                this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, (entityx) -> entityx);
         }
     }
 
@@ -182,6 +187,16 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
 
             disguiseTag.putString("DisguiseType", Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseType).toString());
             disguiseTag.putBoolean("DisguiseAlive", this.disguiselib$disguiseAlive);
+
+            if(this.disguiselib$disguiseEntity != null) {
+                CompoundTag disguiseEntityTag = new CompoundTag();
+                this.disguiselib$disguiseEntity.toTag(disguiseEntityTag);
+
+                Identifier identifier = Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseEntity.getType());
+                disguiseEntityTag.putString("id", identifier.toString());
+
+                disguiseTag.put("DisguiseEntity", disguiseEntityTag);
+            }
 
             tag.put("DisguiseLib", disguiseTag);
         }
