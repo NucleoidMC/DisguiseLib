@@ -1,6 +1,10 @@
 package xyz.nucleoid.disguiselib.packets;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.FallingBlockEntity;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerSpawnS2CPacket;
@@ -54,7 +58,14 @@ public class FakePackets {
      */
     public static EntitySpawnS2CPacket fakeEntitySpawnS2CPacket(Entity entity) {
         EntitySpawnS2CPacket packet = new EntitySpawnS2CPacket(entity);
-        ((EntitySpawnS2CPacketAccessor) packet).setEntityType(((EntityDisguise) entity).getDisguiseType());
+        EntityDisguise fake = (EntityDisguise) entity;
+        ((EntitySpawnS2CPacketAccessor) packet).setEntityType(fake.getDisguiseType());
+        if(fake.getDisguiseType() == EntityType.FALLING_BLOCK && fake.getDisguiseEntity() instanceof FallingBlockEntity)
+            ((EntitySpawnS2CPacketAccessor) packet).setEntityData(
+                    Block.getRawIdFromState(
+                            ((FallingBlockEntity) fake.getDisguiseEntity()).getBlockState()
+                    )
+            );
 
         return packet;
     }

@@ -1,7 +1,9 @@
 package xyz.nucleoid.disguiselib;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import org.jetbrains.annotations.Nullable;
 
 public interface EntityDisguise {
 
@@ -16,6 +18,11 @@ public interface EntityDisguise {
      * @param entityType the type to disguise this entity into
      */
     void disguiseAs(EntityType<?> entityType);
+    /**
+     * Sets entity's disguise from {@link EntityType}
+     * @param entity the entity to disguise into
+     */
+    void disguiseAs(Entity entity);
 
     /**
      * Clears the disguise - sets the disguiseType back to original.
@@ -27,6 +34,13 @@ public interface EntityDisguise {
      * @return disguise entity type or real type if there's no disguise
      */
     EntityType<?> getDisguiseType();
+
+    /**
+     * Gets the disguise entity.
+     * @return disguise entity or null if there's no disguise
+     */
+    @Nullable
+    Entity getDisguiseEntity();
 
     /**
      * Whether disguise type entity is an instance of {@link LivingEntity}.

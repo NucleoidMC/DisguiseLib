@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface EntitySpawnS2CPacketAccessor {
     @Accessor("entityTypeId")
     void setEntityType(EntityType<?> entityType);
-    @Accessor("entityTypeId")
-    EntityType<?> getEntityType();
+    @Accessor("entityData")
+    void setEntityData(int entityData);
 
     @Accessor("id")
     int getEntityId();

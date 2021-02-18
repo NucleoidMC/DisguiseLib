@@ -14,6 +14,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import xyz.nucleoid.disguiselib.EntityDisguise;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -31,6 +32,9 @@ import java.util.stream.Collectors;
 @Mixin(Entity.class)
 public abstract class EntityMixin_Disguise implements EntityDisguise {
 
+    @Unique
+    private Entity disguiselib$disguiseEntity;
+
     @Shadow public abstract EntityType<?> getType();
 
     @Shadow public World world;
@@ -42,11 +46,11 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     @Shadow public abstract float getHeadYaw();
 
     @Unique
-    private boolean disguised, disguiseAlive;
+    private boolean disguiselib$disguised, disguiselib$disguiseAlive;
     @Unique
-    private EntityType<?> disguiseType;
+    private EntityType<?> disguiselib$disguiseType;
     @Unique
-    private final Entity entity = (Entity) (Object) this;
+    private final Entity disguiselib$entity = (Entity) (Object) this;
 
     /**
      * Tells you the disguised status.
@@ -54,7 +58,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
      */
     @Override
     public boolean isDisguised() {
-        return this.disguised;
+        return this.disguiselib$disguised;
     }
 
     /**
@@ -63,19 +67,33 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
      */
     @Override
     public void disguiseAs(EntityType<?> entityType) {
-        this.disguised = true;
-        this.disguiseType = entityType;
-        this.disguiseAlive = entityType == EntityType.PLAYER || entityType.create(world) instanceof LivingEntity;
+        this.disguiselib$disguised = true;
+        this.disguiselib$disguiseType = entityType;
+        if(this.disguiselib$disguiseEntity != null && this.disguiselib$disguiseEntity.getType() != entityType) {
+            this.disguiselib$disguiseEntity = this.disguiselib$entity;
+        }
+        this.disguiselib$disguiseAlive = entityType == EntityType.PLAYER || entityType.create(world) instanceof LivingEntity;
 
         PlayerManager manager = this.world.getServer().getPlayerManager();
         RegistryKey<World> worldRegistryKey = this.world.getRegistryKey();
 
         manager.sendToDimension(new EntitiesDestroyS2CPacket(entityId), worldRegistryKey);
-        manager.sendToDimension(new EntitySpawnS2CPacket(this.entity), worldRegistryKey); // will be replaced by network handler
+        manager.sendToDimension(new EntitySpawnS2CPacket(this.disguiselib$entity), worldRegistryKey); // will be replaced by network handler
 
-        manager.sendToDimension(new EntityTrackerUpdateS2CPacket(this.entityId, this.getDataTracker(), true), worldRegistryKey);
+        manager.sendToDimension(new EntityTrackerUpdateS2CPacket(this.entityId, this.disguiselib$disguiseEntity.getDataTracker(), true), worldRegistryKey);
         manager.sendToDimension(new EntityEquipmentUpdateS2CPacket(this.entityId, this.getEquipment()), worldRegistryKey); // Reload equipment
-        manager.sendToDimension(new EntitySetHeadYawS2CPacket(this.entity, (byte)((int)(this.getHeadYaw() * 256.0F / 360.0F))), worldRegistryKey); // Head correction
+        manager.sendToDimension(new EntitySetHeadYawS2CPacket(this.disguiselib$entity, (byte)((int)(this.getHeadYaw() * 256.0F / 360.0F))), worldRegistryKey); // Head correction
+    }
+
+    /**
+     * Sets entity's disguise from {@link Entity}
+     *
+     * @param entity the entity to disguise into
+     */
+    @Override
+    public void disguiseAs(Entity entity) {
+        this.disguiselib$disguiseEntity = entity;
+        this.disguiseAs(entity.getType());
     }
 
     /**
@@ -86,18 +104,19 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
      */
     @Unique
     private List<Pair<EquipmentSlot, ItemStack>> getEquipment() {
-        if(entity instanceof LivingEntity)
-            return Arrays.stream(EquipmentSlot.values()).map(slot -> new Pair<>(slot, ((LivingEntity) entity).getEquippedStack(slot))).collect(Collectors.toList());
+        if(disguiselib$entity instanceof LivingEntity)
+            return Arrays.stream(EquipmentSlot.values()).map(slot -> new Pair<>(slot, ((LivingEntity) disguiselib$entity).getEquippedStack(slot))).collect(Collectors.toList());
         return Collections.emptyList();
     }
 
     /**
-     * Clears the disguise - sets the {@link EntityMixin_Disguise#disguiseType} back to original.
+     * Clears the disguise - sets the {@link EntityMixin_Disguise#disguiselib$disguiseType} back to original.
      */
     @Override
     public void removeDisguise() {
         this.disguiseAs(this.getType());
-        this.disguised = false;
+        this.disguiselib$disguised = false;
+        this.disguiselib$disguiseEntity = null;
     }
 
     /**
@@ -106,7 +125,17 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
      */
     @Override
     public EntityType<?> getDisguiseType() {
-        return this.disguiseType;
+        return this.disguiselib$disguiseType;
+    }
+
+    /**
+     * Gets the disguise entity.
+     *
+     * @return disguise entity or null if there's no disguise
+     */
+    @Override
+    public @Nullable Entity getDisguiseEntity() {
+        return this.disguiselib$disguiseEntity;
     }
 
     /**
@@ -115,7 +144,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
      */
     @Override
     public boolean disguiseAlive() {
-        return this.disguiseAlive;
+        return this.disguiselib$disguiseAlive;
     }
 
     /**
@@ -131,10 +160,10 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         CompoundTag disguiseTag = (CompoundTag) tag.get("DisguiseLib");
 
         if(disguiseTag != null) {
-            this.disguised = true;
+            this.disguiselib$disguised = true;
             Identifier disguiseTypeId = new Identifier(disguiseTag.getString("DisguiseType"));
-            this.disguiseType = Registry.ENTITY_TYPE.get(disguiseTypeId);
-            this.disguiseAlive = disguiseTag.getBoolean("DisguiseAlive");
+            this.disguiselib$disguiseType = Registry.ENTITY_TYPE.get(disguiseTypeId);
+            this.disguiselib$disguiseAlive = disguiseTag.getBoolean("DisguiseAlive");
         }
     }
 
@@ -148,11 +177,11 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             at = @At("TAIL")
     )
     private void toTag(CompoundTag tag, CallbackInfoReturnable<CompoundTag> cir) {
-        if(this.disguised) {
+        if(this.disguiselib$disguised) {
             CompoundTag disguiseTag = new CompoundTag();
 
-            disguiseTag.putString("DisguiseType", Registry.ENTITY_TYPE.getId(this.disguiseType).toString());
-            disguiseTag.putBoolean("DisguiseAlive", this.disguiseAlive);
+            disguiseTag.putString("DisguiseType", Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseType).toString());
+            disguiseTag.putBoolean("DisguiseAlive", this.disguiselib$disguiseAlive);
 
             tag.put("DisguiseLib", disguiseTag);
         }
