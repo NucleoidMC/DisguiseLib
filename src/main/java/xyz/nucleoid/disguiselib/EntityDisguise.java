@@ -1,5 +1,6 @@
 package xyz.nucleoid.disguiselib;
 
+import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -47,4 +48,19 @@ public interface EntityDisguise {
      * @return true whether the disguise type is an instance of {@link LivingEntity}, otherwise false.
      */
     boolean disguiseAlive();
+
+    /**
+     * Sets the GameProfile
+     *
+     * @param gameProfile a new profile for the entity.
+     */
+    void setGameProfile(@Nullable GameProfile gameProfile);
+
+    /**
+     * Gets the {@link GameProfile} for disguised entity,
+     * used when disguising as player.
+     *
+     * @return GameProfile of the entity.
+     */
+    @Nullable GameProfile getGameProfile();
 }

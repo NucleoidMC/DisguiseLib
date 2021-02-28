@@ -35,6 +35,7 @@ public class DisguiseCommand {
                                     )
                             )
                             .then(literal("minecraft:player").executes(DisguiseCommand::disguiseAsPlayer))
+                            .then(literal("player").executes(DisguiseCommand::disguiseAsPlayer))
                         )
                         .then(literal("clear").executes(DisguiseCommand::clearDisguise))
                 )
@@ -57,7 +58,6 @@ public class DisguiseCommand {
     private static int setDisguise(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         Entity entity = EntityArgumentType.getEntity(ctx, "target");
         Identifier disguise = EntitySummonArgumentType.getEntitySummon(ctx, "disguise");
-
 
         CompoundTag nbt;
         try {

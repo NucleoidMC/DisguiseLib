@@ -11,22 +11,22 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
-import xyz.nucleoid.disguiselib.mixin.accessor.*;
-import xyz.nucleoid.disguiselib.packets.FakePackets;
-import xyz.nucleoid.disguiselib.EntityDisguise;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import xyz.nucleoid.disguiselib.EntityDisguise;
+import xyz.nucleoid.disguiselib.mixin.accessor.*;
+import xyz.nucleoid.disguiselib.packets.FakePackets;
 
 import java.util.Collections;
 
 @Mixin(ServerPlayNetworkHandler.class)
 public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
     @Shadow public ServerPlayerEntity player;
-    @Unique private boolean skipCheck;
+    @Unique private boolean disguiselib$skipCheck;
     @Shadow public abstract void sendPacket(Packet<?> packet);
 
     /**
@@ -46,7 +46,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             cancellable = true
     )
     private void disguiseEntity(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>> listener, CallbackInfo ci) {
-        if(!this.skipCheck) {
+        if(!this.disguiselib$skipCheck) {
             World world = this.player.getEntityWorld();
             Entity entity = null;
 
@@ -65,7 +65,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                     disguise.isDisguised() &&
                     entity.getEntityId() != this.player.getEntityId() // do not send the packet to the player themselves
             ) {
-                sendFakePacket(entity);
+                disguiselib$sendFakePacket(entity);
                 ci.cancel();
             }
         }
@@ -76,18 +76,13 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
      * @param entity the entity that is disguised and needs to have a custom packet sent.
      */
     @Unique
-    private void sendFakePacket(Entity entity) {
+    private void disguiselib$sendFakePacket(Entity entity) {
         EntityDisguise disguise = (EntityDisguise) entity;
-        GameProfile profile;
-
-        if(entity instanceof ServerPlayerEntity)
-            profile = ((ServerPlayerEntity) entity).getGameProfile();
-        else
-            profile = new GameProfile(entity.getUuid(), entity.getName().getString());
+        GameProfile profile = disguise.getGameProfile();
 
         this.sendPacket(new EntitiesDestroyS2CPacket(entity.getEntityId()));
 
-        this.skipCheck = true;
+        this.disguiselib$skipCheck = true;
         if(disguise.getDisguiseType() == EntityType.PLAYER) {
             PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER);
             PlayerListS2CPacketAccessor listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
@@ -97,11 +92,6 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             this.sendPacket(FakePackets.fakePlayerSpawnS2CPacket(entity));
 
         } else {
-            PlayerListS2CPacket listPacket = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
-            PlayerListS2CPacketAccessor listPacketAccessor = (PlayerListS2CPacketAccessor) listPacket;
-            listPacketAccessor.setEntries(Collections.singletonList(listPacket.new Entry(profile, 0, GameMode.SURVIVAL, entity.getName())));
-
-            this.sendPacket(listPacket);
             if(disguise.disguiseAlive()) {
                 this.sendPacket(FakePackets.fakeMobSpawnS2CPacket(entity));
             } else {
@@ -109,6 +99,6 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             }
         }
 
-        this.skipCheck = false;
+        this.disguiselib$skipCheck = false;
     }
 }

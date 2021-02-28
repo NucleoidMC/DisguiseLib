@@ -30,7 +30,5 @@
     "fabricloader": ">=0.7.4",
     "fabric": "*"
   },
-  "suggests": {
-    "another-mod": "*"
-  }
+  "accessWidener": "disguiselib.aw"
 }

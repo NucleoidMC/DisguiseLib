@@ -10,4 +10,6 @@ import java.util.List;
 public interface PlayerListS2CPacketAccessor {
     @Accessor("entries")
     void setEntries(List<PlayerListS2CPacket.Entry> entries);
+    @Accessor("action")
+    void setAction(PlayerListS2CPacket.Action action);
 }

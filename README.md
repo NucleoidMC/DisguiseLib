@@ -7,16 +7,12 @@ Features built-in `/disguise` command as well.
 ```gradle
 repositories {
 	maven {
-		url 'https://jitpack.io'
+		url 'https://maven.nucleoid.xyz'
 	}
 }
 
 dependencies {
-  // By version tag
-  modImplementation 'com.github.NucleoidMC:DisguiseLib:VERSION_TAG'
-  
-  // Or by branch
-  modImplementation 'com.github.NucleoidMC:DisguiseLib:-SNAPSHOT'
+  modImplementation "xyz.nucleoid:DisguiseLib:${project.disguiselib_version}"
 }
 ```
 # API
