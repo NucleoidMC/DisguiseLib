@@ -6,6 +6,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
@@ -63,6 +64,8 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
 
     @Shadow public abstract int getEntityId();
 
+    @Shadow public abstract DataTracker getDataTracker();
+
     @Unique
     private boolean disguiselib$disguised, disguiselib$disguiseAlive;
     @Unique
@@ -89,45 +92,48 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     public void disguiseAs(EntityType<?> entityType) {
         this.disguiselib$disguised = true;
         this.disguiselib$disguiseType = entityType;
+        PlayerManager manager = this.world.getServer().getPlayerManager();
 
-        if(this.disguiselib$disguiseEntity == null || this.disguiselib$disguiseEntity.getType() != entityType) {
-            if(entityType == PLAYER) {
-                if(this.disguiselib$profile == null)
-                    this.disguiselib$profile = new GameProfile(this.uuid, this.getName().getString());
-                //noinspection MixinInnerClass
-                this.disguiselib$disguiseEntity = new PlayerEntity(this.world, this.disguiselib$entity.getBlockPos(), this.getHeadYaw(), this.disguiselib$profile) {
-                    @Override
-                    public boolean isSpectator() {
-                        return false;
-                    }
+        if(entityType == PLAYER) {
+            if(this.disguiselib$profile == null)
+                this.disguiselib$profile = new GameProfile(this.uuid, this.getName().getString());
+            //noinspection MixinInnerClass
+            this.disguiselib$disguiseEntity = new PlayerEntity(this.world, this.disguiselib$entity.getBlockPos(), this.getHeadYaw(), this.disguiselib$profile) {
+                @Override
+                public boolean isSpectator() {
+                    return false;
+                }
 
-                    @Override
-                    public boolean isCreative() {
-                        return false;
-                    }
-                };
-                // Showing all skin parts
-                this.disguiselib$disguiseEntity.getDataTracker().set(PLAYER_MODEL_PARTS, (byte) 0x7f);
-            }
-            else {
-                this.disguiselib$profile = null;
+                @Override
+                public boolean isCreative() {
+                    return false;
+                }
+            };
+            // Showing all skin parts
+            this.disguiselib$disguiseEntity.getDataTracker().set(PLAYER_MODEL_PARTS, (byte) 0x7f);
+        } else {
+            if(this.disguiselib$disguiseEntity == null)
                 this.disguiselib$disguiseEntity = entityType.create(world);
 
+            if(this.disguiselib$profile != null) {
+                // Previous type was player, we have to send a player remove packet
                 PlayerListS2CPacket listPacket = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
                 PlayerListS2CPacketAccessor listPacketAccessor = (PlayerListS2CPacketAccessor) listPacket;
                 listPacketAccessor.setEntries(Collections.singletonList(listPacket.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, this.getName())));
+                manager.sendToAll(listPacket);
             }
+            this.disguiselib$profile = null;
         }
 
-        System.out.println(this.disguiselib$disguiseEntity);
         this.disguiselib$disguiseAlive = entityType == PLAYER || this.disguiselib$disguiseEntity instanceof LivingEntity;
 
         RegistryKey<World> worldRegistryKey = this.world.getRegistryKey();
-        PlayerManager manager = this.world.getServer().getPlayerManager();
-        manager.sendToDimension(new EntitiesDestroyS2CPacket(entityId), worldRegistryKey);
+
+        // Updating entity on the client
+        manager.sendToDimension(new EntitiesDestroyS2CPacket(this.entityId), worldRegistryKey);
         manager.sendToDimension(new EntitySpawnS2CPacket(this.disguiselib$entity), worldRegistryKey); // will be replaced by network handler
 
-        manager.sendToDimension(new EntityTrackerUpdateS2CPacket(this.entityId, this.disguiselib$disguiseEntity.getDataTracker(), true), worldRegistryKey);
+        manager.sendToDimension(new EntityTrackerUpdateS2CPacket(this.entityId, this.getDataTracker(), true), worldRegistryKey);
         manager.sendToDimension(new EntityEquipmentUpdateS2CPacket(this.entityId, this.getEquipment()), worldRegistryKey); // Reload equipment
         manager.sendToDimension(new EntitySetHeadYawS2CPacket(this.disguiselib$entity, (byte)((int)(this.getHeadYaw() * 256.0F / 360.0F))), worldRegistryKey); // Head correction
     }
@@ -140,8 +146,9 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     @Override
     public void disguiseAs(Entity entity) {
         this.disguiselib$disguiseEntity = entity;
-        if(entity instanceof PlayerEntity)
+        if(entity instanceof PlayerEntity) {
             this.disguiselib$profile = ((PlayerEntity) entity).getGameProfile();
+        }
         this.disguiseAs(entity.getType());
     }
 
@@ -253,7 +260,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             at = @At("TAIL")
     )
     private void onRemove(CallbackInfo ci) {
-        if(this.isDisguised() && this.disguiselib$disguiseType == PLAYER && !(this.disguiselib$entity instanceof PlayerEntity)) {
+        if(this.isDisguised() && this.disguiselib$profile != null) {
             // If entity was killed, we should also send a remove player action packet
             PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
             PlayerListS2CPacketAccessor listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
@@ -262,7 +269,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             listS2CPacketAccessor.setEntries(Collections.singletonList(packet.new Entry(profile, 0, GameMode.SURVIVAL, this.getName())));
 
             PlayerManager manager = this.world.getServer().getPlayerManager();
-            manager.sendToDimension(packet, this.world.getRegistryKey());
+            manager.sendToAll(packet);
         }
     }
 
@@ -287,6 +294,24 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             CompoundTag disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
             if(!disguiseEntityTag.isEmpty())
                 this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, (entityx) -> entityx);
+
+            if(this.disguiselib$disguiseType == PLAYER) {
+                this.disguiselib$profile = new GameProfile(this.uuid, this.getName().getString());
+                //noinspection MixinInnerClass
+                this.disguiselib$disguiseEntity = new PlayerEntity(this.world, this.disguiselib$entity.getBlockPos(), this.getHeadYaw(), this.disguiselib$profile) {
+                    @Override
+                    public boolean isSpectator() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean isCreative() {
+                        return false;
+                    }
+                };
+                // Showing all skin parts
+                this.disguiselib$disguiseEntity.getDataTracker().set(PLAYER_MODEL_PARTS, (byte) 0x7f);
+            }
         }
     }
 

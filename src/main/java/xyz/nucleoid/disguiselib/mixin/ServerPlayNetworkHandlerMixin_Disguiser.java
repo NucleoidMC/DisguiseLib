@@ -5,6 +5,7 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.data.DataTracker;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -22,6 +23,7 @@ import xyz.nucleoid.disguiselib.mixin.accessor.*;
 import xyz.nucleoid.disguiselib.packets.FakePackets;
 
 import java.util.Collections;
+import java.util.List;
 
 @Mixin(ServerPlayNetworkHandler.class)
 public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
@@ -58,6 +60,23 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                 entity = world.getEntityById(((EntitySpawnS2CPacketAccessor) packet).getEntityId());
             } else if(packet instanceof EntitiesDestroyS2CPacket && ((EntitiesDestroyS2CPacketAccessor) packet).getEntityIds()[0] == this.player.getEntityId()) {
                 ci.cancel();
+            } else if(packet instanceof EntityTrackerUpdateS2CPacket) {
+                // Fixing "wrong data" client issue (#1)
+                // Just prevents the client from spamming the log
+                Entity original = world.getEntityById(((EntityTrackerUpdateS2CPacketAccessor) packet).getEntityId());
+
+                if(((EntityTrackerUpdateS2CPacketAccessor) packet).getEntityId() != this.player.getEntityId()) {
+                    // Only change the content if entity is disguised
+                    if(original != null && ((EntityDisguise) original).isDisguised()) {
+                        Entity disguised = ((EntityDisguise) original).getDisguiseEntity();
+                        if(disguised != null) {
+                            List<DataTracker.Entry<?>> trackedValues = disguised.getDataTracker().getAllEntries();
+                            ((EntityTrackerUpdateS2CPacketAccessor) packet).setTrackedValues(trackedValues);
+                        }
+                    }
+                }
+
+
             }
             EntityDisguise disguise = (EntityDisguise) entity;
             if(
