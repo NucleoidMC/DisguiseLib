@@ -66,6 +66,8 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
 
     @Shadow public abstract DataTracker getDataTracker();
 
+    @Shadow @Nullable public abstract Text getCustomName();
+
     @Unique
     private boolean disguiselib$disguised, disguiselib$disguiseAlive;
     @Unique
@@ -128,6 +130,9 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         this.disguiselib$disguiseAlive = entityType == PLAYER || this.disguiselib$disguiseEntity instanceof LivingEntity;
 
         RegistryKey<World> worldRegistryKey = this.world.getRegistryKey();
+
+        this.disguiselib$disguiseEntity.setNoGravity(true);
+        this.disguiselib$disguiseEntity.setCustomName(this.getCustomName());
 
         // Updating entity on the client
         manager.sendToDimension(new EntitiesDestroyS2CPacket(this.entityId), worldRegistryKey);
