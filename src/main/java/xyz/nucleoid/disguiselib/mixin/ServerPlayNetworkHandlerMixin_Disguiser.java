@@ -72,11 +72,19 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                         if(disguised != null) {
                             List<DataTracker.Entry<?>> trackedValues = disguised.getDataTracker().getAllEntries();
                             ((EntityTrackerUpdateS2CPacketAccessor) packet).setTrackedValues(trackedValues);
+                            return;
                         }
                     }
                 }
+            } else if(packet instanceof EntityAttributesS2CPacket) {
+                // Fixing #2
+                // Another client spam
+                Entity original = world.getEntityById(((EntityAttributesS2CPacketAccessor) packet).getEntityId());
 
-
+                if(original != null && ((EntityDisguise) original).isDisguised() && !((EntityDisguise) original).disguiseAlive()) {
+                    ci.cancel();
+                    return;
+                }
             }
             EntityDisguise disguise = (EntityDisguise) entity;
             if(

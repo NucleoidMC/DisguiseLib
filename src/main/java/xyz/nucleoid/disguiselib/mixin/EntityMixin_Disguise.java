@@ -2,10 +2,7 @@ package xyz.nucleoid.disguiselib.mixin;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Pair;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.*;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -252,6 +249,20 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         EntityTrackerEntryAccessor trackerEntry = ((ThreadedAnvilChunkStorageAccessor) storage).getEntityTrackers().get(this.getEntityId());
         if(trackerEntry != null)
             trackerEntry.getTrackingPlayers().forEach(tracking -> trackerEntry.getEntry().startTracking(tracking));
+    }
+
+    /**
+     * Sends additional move packets to the client if
+     * entity is disguised.
+     * Prevents client desync and fixes "blocky" movement.
+     * @param ci
+     */
+    @Inject(method = "tick()V", at = @At("TAIL"))
+    private void postTick(CallbackInfo ci) {
+        // Fixes #2, also makes non-living entities update their pos
+        // more than once per second -> movement isn't as "blocky"
+        if(this.isDisguised() && this.world.getServer() != null && !(this.disguiselib$disguiseEntity instanceof LivingEntity) && !(this.disguiselib$entity instanceof PlayerEntity))
+            this.world.getServer().getPlayerManager().sendToDimension(new EntityPositionS2CPacket(this.disguiselib$entity), this.world.getRegistryKey());
     }
 
     /**
