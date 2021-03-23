@@ -9,8 +9,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.server.PlayerManager;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -65,6 +67,12 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
 
     @Shadow @Nullable public abstract Text getCustomName();
 
+    @Shadow private EntityDimensions dimensions;
+
+    @Shadow private float standingEyeHeight;
+
+    @Shadow protected abstract float getEyeHeight(EntityPose pose, EntityDimensions dimensions);
+
     @Unique
     private boolean disguiselib$disguised, disguiselib$disguiseAlive;
     @Unique
@@ -91,7 +99,14 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     public void disguiseAs(EntityType<?> entityType) {
         this.disguiselib$disguised = true;
         this.disguiselib$disguiseType = entityType;
+
         PlayerManager manager = this.world.getServer().getPlayerManager();
+
+        if(this.disguiselib$disguiseEntity != null && this.disguiselib$disguiseEntity.getType() != entityType && this.disguiselib$entity instanceof ServerPlayerEntity) {
+            // Removing previous disguise if this is player
+            // (we have it saved under a separate id)
+            ((ServerPlayerEntity) this.disguiselib$entity).networkHandler.sendPacket(new EntitiesDestroyS2CPacket(this.disguiselib$disguiseEntity.getEntityId()));
+        }
 
         if(entityType == PLAYER) {
             if(this.disguiselib$profile == null)
@@ -118,7 +133,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
                 // Previous type was player, we have to send a player remove packet
                 PlayerListS2CPacket listPacket = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
                 PlayerListS2CPacketAccessor listPacketAccessor = (PlayerListS2CPacketAccessor) listPacket;
-                listPacketAccessor.setEntries(Collections.singletonList(listPacket.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, this.getName())));
+                listPacketAccessor.setEntries(Collections.singletonList(listPacket.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
                 manager.sendToAll(listPacket);
             }
             this.disguiselib$profile = null;
@@ -130,6 +145,10 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
 
         this.disguiselib$disguiseEntity.setNoGravity(true);
         this.disguiselib$disguiseEntity.setCustomName(this.getCustomName());
+
+        // Dimensions ??
+        this.dimensions = entityType.getDimensions();
+        this.standingEyeHeight = this.getEyeHeight(EntityPose.STANDING, this.dimensions);
 
         // Updating entity on the client
         manager.sendToDimension(new EntitiesDestroyS2CPacket(this.entityId), worldRegistryKey);
@@ -147,6 +166,11 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
      */
     @Override
     public void disguiseAs(Entity entity) {
+        if(this.disguiselib$entity instanceof ServerPlayerEntity && this.disguiselib$disguiseEntity != null) {
+            // Removing old disguise entity
+            ((ServerPlayerEntity) this.disguiselib$entity).networkHandler.sendPacket(new EntitiesDestroyS2CPacket(this.disguiselib$disguiseEntity.getEntityId()));
+        }
+
         this.disguiselib$disguiseEntity = entity;
         if(entity instanceof PlayerEntity) {
             this.disguiselib$profile = ((PlayerEntity) entity).getGameProfile();
@@ -236,7 +260,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         PlayerListS2CPacket packet = new PlayerListS2CPacket();
         //noinspection ConstantConditions
         PlayerListS2CPacketAccessor accessor = (PlayerListS2CPacketAccessor) packet;
-        accessor.setEntries(Collections.singletonList(packet.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, this.getName())));
+        accessor.setEntries(Collections.singletonList(packet.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
 
         PlayerManager playerManager = this.world.getServer().getPlayerManager();
         accessor.setAction(REMOVE_PLAYER);

@@ -14,4 +14,7 @@ public interface EntitySpawnS2CPacketAccessor {
 
     @Accessor("id")
     int getEntityId();
+
+    @Accessor("id")
+    void setEntityId(int id);
 }

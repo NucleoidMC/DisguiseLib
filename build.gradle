@@ -3,6 +3,12 @@ plugins {
 	id 'maven-publish'
 }
 
+repositories {
+	maven {
+		url 'https://dl.bintray.com/bymartrixx/maven'
+	}
+}
+
 
 loom {
 	accessWidener("src/main/resources/disguiselib.aw")
@@ -32,6 +38,8 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
+	// Why did my command fail
+	modImplementation 'io.github.bymartrixx.wdmcf:wdmcf:1.0.1'
 }
 
 processResources {
