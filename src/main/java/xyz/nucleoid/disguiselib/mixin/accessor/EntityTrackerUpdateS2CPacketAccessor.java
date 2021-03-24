@@ -11,6 +11,9 @@ import java.util.List;
 public interface EntityTrackerUpdateS2CPacketAccessor {
     @Accessor("id")
     int getEntityId();
+    @Accessor("id")
+    void setEntityId(int id);
+
     @Accessor("trackedValues")
     void setTrackedValues(List<DataTracker.Entry<?>> trackedValues);
 }

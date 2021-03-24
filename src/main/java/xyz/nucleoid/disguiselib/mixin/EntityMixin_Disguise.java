@@ -13,7 +13,10 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
@@ -48,6 +51,8 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
 
     @Unique
     private Entity disguiselib$disguiseEntity;
+    @Unique
+    private int disguiselib$ticks;
 
     @Shadow public abstract EntityType<?> getType();
 
@@ -285,8 +290,20 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     private void postTick(CallbackInfo ci) {
         // Fixes #2, also makes non-living entities update their pos
         // more than once per second -> movement isn't as "blocky"
-        if(this.isDisguised() && this.world.getServer() != null && !(this.disguiselib$disguiseEntity instanceof LivingEntity) && !(this.disguiselib$entity instanceof PlayerEntity))
-            this.world.getServer().getPlayerManager().sendToDimension(new EntityPositionS2CPacket(this.disguiselib$entity), this.world.getRegistryKey());
+        if(this.isDisguised()) {
+            if(this.world.getServer() != null && !(this.disguiselib$disguiseEntity instanceof LivingEntity) && !(this.disguiselib$entity instanceof PlayerEntity))
+                this.world.getServer().getPlayerManager().sendToDimension(new EntityPositionS2CPacket(this.disguiselib$entity), this.world.getRegistryKey());
+            else if(this.disguiselib$entity instanceof ServerPlayerEntity && ++this.disguiselib$ticks % 40 == 0) {
+                // "Disguised as" message
+                MutableText msg = new LiteralText("You are disguised as ")
+                        .append(new TranslatableText(this.disguiselib$disguiseEntity.getType().getTranslationKey()))
+                        .formatted(Formatting.GREEN);
+
+                ((ServerPlayerEntity) this.disguiselib$entity).sendMessage(msg, true);
+                this.disguiselib$ticks = 0;
+            }
+        }
+
     }
 
     /**

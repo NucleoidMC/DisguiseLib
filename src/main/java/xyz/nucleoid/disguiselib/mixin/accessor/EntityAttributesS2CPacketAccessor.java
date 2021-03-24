@@ -8,4 +8,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface EntityAttributesS2CPacketAccessor {
     @Accessor("entityId")
     int getEntityId();
+    @Accessor("entityId")
+    void setEntityId(int id);
 }

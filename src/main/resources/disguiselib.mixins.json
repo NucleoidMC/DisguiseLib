@@ -9,6 +9,7 @@
     "accessor.EntitiesDestroyS2CPacketAccessor",
     "accessor.EntityAttributesS2CPacketAccessor",
     "accessor.EntityPositionS2CPacketAccessor",
+    "accessor.EntitySetHeadYawS2CPacketAccessor",
     "accessor.EntitySpawnS2CPacketAccessor",
     "accessor.EntityTrackerEntryAccessor",
     "accessor.EntityTrackerUpdateS2CPacketAccessor",
