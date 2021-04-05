@@ -29,6 +29,5 @@
   "depends": {
     "fabricloader": ">=0.7.4",
     "fabric": "*"
-  },
-  "accessWidener": "disguiselib.aw"
+  }
 }

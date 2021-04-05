@@ -46,8 +46,6 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
      * own disguise.
      *
      * @param packet packet being sent
-     * @param listener
-     * @param ci
      */
     @Inject(
             method = "sendPacket(Lnet/minecraft/network/Packet;Lio/netty/util/concurrent/GenericFutureListener;)V",
@@ -62,7 +60,12 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             World world = this.player.getEntityWorld();
             Entity entity = null;
 
-            if(packet instanceof PlayerSpawnS2CPacket) {
+            if(packet instanceof PlayerListS2CPacket && ((PlayerListS2CPacketAccessor) packet).getAction().equals(PlayerListS2CPacket.Action.ADD_PLAYER)) {
+                PlayerListS2CPacket.Entry entry = ((PlayerListS2CPacketAccessor) packet).getEntries().get(0);
+                if(this.player.getGameProfile().getId().equals(entry.getProfile().getId())) {
+                    entity = this.player;
+                }
+            } else if(packet instanceof PlayerSpawnS2CPacket) {
                 entity = world.getEntityById(((PlayerSpawnS2CPacketAccessor) packet).getId());
             } else if(packet instanceof MobSpawnS2CPacket) {
                 entity = world.getEntityById(((MobSpawnS2CPacketAccessor) packet).getEntityId());
@@ -83,11 +86,10 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                             // Only change the content if entity is disguised
                             List<DataTracker.Entry<?>> trackedValues = disguised.getDataTracker().getAllEntries();
                             ((EntityTrackerUpdateS2CPacketAccessor) packet).setTrackedValues(trackedValues);
-                            return;
                         } else {
                             this.player.setInvisible(disguised.getType() != EntityType.PLAYER);
-                            return;
                         }
+                        return;
                     }
                 }
             } else if(packet instanceof EntityAttributesS2CPacket) {

@@ -42,9 +42,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static net.minecraft.entity.EntityType.PLAYER;
-import static net.minecraft.entity.player.PlayerEntity.PLAYER_MODEL_PARTS;
 import static net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action.ADD_PLAYER;
 import static net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action.REMOVE_PLAYER;
+import static xyz.nucleoid.disguiselib.mixin.accessor.PlayerEntityAccessor.getPLAYER_MODEL_PARTS;
 
 @Mixin(Entity.class)
 public abstract class EntityMixin_Disguise implements EntityDisguise {
@@ -129,7 +129,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
                 }
             };
             // Showing all skin parts
-            this.disguiselib$disguiseEntity.getDataTracker().set(PLAYER_MODEL_PARTS, (byte) 0x7f);
+            this.disguiselib$disguiseEntity.getDataTracker().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
         } else {
             if(this.disguiselib$disguiseEntity == null)
                 this.disguiselib$disguiseEntity = entityType.create(world);
@@ -144,16 +144,12 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             this.disguiselib$profile = null;
         }
 
-        this.disguiselib$disguiseAlive = entityType == PLAYER || this.disguiselib$disguiseEntity instanceof LivingEntity;
+        this.disguiselib$disguiseAlive = this.disguiselib$disguiseEntity instanceof LivingEntity;
 
         RegistryKey<World> worldRegistryKey = this.world.getRegistryKey();
 
         this.disguiselib$disguiseEntity.setNoGravity(true);
         this.disguiselib$disguiseEntity.setCustomName(this.getCustomName());
-
-        // Dimensions ??
-        this.dimensions = entityType.getDimensions();
-        this.standingEyeHeight = this.getEyeHeight(EntityPose.STANDING, this.dimensions);
 
         // Updating entity on the client
         manager.sendToDimension(new EntitiesDestroyS2CPacket(this.entityId), worldRegistryKey);
@@ -284,7 +280,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
      * Sends additional move packets to the client if
      * entity is disguised.
      * Prevents client desync and fixes "blocky" movement.
-     * @param ci
      */
     @Inject(method = "tick()V", at = @At("TAIL"))
     private void postTick(CallbackInfo ci) {
@@ -310,7 +305,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
      * If entity is disguised as player, we need to send a player
      * remove packet on death as well, otherwise tablist still contains
      * it.
-     * @param ci
      */
     @Inject(
             method = "remove()V",
@@ -330,10 +324,15 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         }
     }
 
+    @Inject(method = "pushAwayFrom(Lnet/minecraft/entity/Entity;)V", at = @At("HEAD"), cancellable = true)
+    private void checkCollisions(Entity entity, CallbackInfo ci) {
+        if(this.isDisguised())
+            ci.cancel();
+    }
+
     /**
      * Takes care of loading the fake entity data from tag.
-     * @param tag
-     * @param ci
+     * @param tag tag to load data from.
      */
     @Inject(
             method = "fromTag(Lnet/minecraft/nbt/CompoundTag;)V",
@@ -367,15 +366,14 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
                     }
                 };
                 // Showing all skin parts
-                this.disguiselib$disguiseEntity.getDataTracker().set(PLAYER_MODEL_PARTS, (byte) 0x7f);
+                this.disguiselib$disguiseEntity.getDataTracker().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
             }
         }
     }
 
     /**
      * Takes care of saving the fake entity data to tag.
-     * @param tag
-     * @param cir
+     * @param tag tag to save data to.
      */
     @Inject(
             method = "toTag(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/nbt/CompoundTag;",
