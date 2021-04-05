@@ -9,13 +9,11 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -29,13 +27,13 @@ import xyz.nucleoid.disguiselib.packets.FakePackets;
 import java.util.Collections;
 import java.util.List;
 
+import static xyz.nucleoid.disguiselib.DisguiseLib.DISGUISE_TEAM;
+
 @Mixin(ServerPlayNetworkHandler.class)
 public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
     @Shadow public ServerPlayerEntity player;
     @Unique private boolean disguiselib$skipCheck;
     @Shadow public abstract void sendPacket(Packet<?> packet);
-
-    @Shadow @Final private MinecraftServer server;
 
     /**
      * Checks the packet that was sent. If the entity in the packet is disguised, the
@@ -154,7 +152,16 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                         ((EntitySpawnS2CPacketAccessor) packet).setEntityId(disguiseEntity.getEntityId());
                         this.sendPacket(packet);
                     }
+                    // Disabling collisions with the disguised entity itself
+                    TeamS2CPacket addTeamPacket = new TeamS2CPacket(DISGUISE_TEAM, 0); // create team
+                    TeamS2CPacket joinTeamPacket = new TeamS2CPacket(DISGUISE_TEAM, Collections.singletonList(this.player.getGameProfile().getName()), 3); // join team
+                    this.sendPacket(addTeamPacket);
+                    this.sendPacket(joinTeamPacket);
                 }
+            } else {
+                // Removing team
+                TeamS2CPacket removeTeamPacket = new TeamS2CPacket(DISGUISE_TEAM, 1);
+                this.sendPacket(removeTeamPacket);
             }
             ci.cancel();
         } else if(disguise.isDisguised()) {

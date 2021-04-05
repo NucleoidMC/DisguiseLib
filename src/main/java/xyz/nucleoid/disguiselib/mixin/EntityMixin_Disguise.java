@@ -2,7 +2,10 @@ package xyz.nucleoid.disguiselib.mixin;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Pair;
-import net.minecraft.entity.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -71,12 +74,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     @Shadow public abstract DataTracker getDataTracker();
 
     @Shadow @Nullable public abstract Text getCustomName();
-
-    @Shadow private EntityDimensions dimensions;
-
-    @Shadow private float standingEyeHeight;
-
-    @Shadow protected abstract float getEyeHeight(EntityPose pose, EntityDimensions dimensions);
 
     @Unique
     private boolean disguiselib$disguised, disguiselib$disguiseAlive;
@@ -322,12 +319,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             PlayerManager manager = this.world.getServer().getPlayerManager();
             manager.sendToAll(packet);
         }
-    }
-
-    @Inject(method = "pushAwayFrom(Lnet/minecraft/entity/Entity;)V", at = @At("HEAD"), cancellable = true)
-    private void checkCollisions(Entity entity, CallbackInfo ci) {
-        if(this.isDisguised())
-            ci.cancel();
     }
 
     /**
