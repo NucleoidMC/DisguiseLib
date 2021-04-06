@@ -60,7 +60,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
 
             if(packet instanceof PlayerListS2CPacket && ((PlayerListS2CPacketAccessor) packet).getAction().equals(PlayerListS2CPacket.Action.ADD_PLAYER)) {
                 PlayerListS2CPacket.Entry entry = ((PlayerListS2CPacketAccessor) packet).getEntries().get(0);
-                if(this.player.getGameProfile().getId().equals(entry.getProfile().getId())) {
+                if(this.player.getGameProfile().getId().equals(entry.getProfile().getId()) && ((EntityDisguise) this.player).isDisguised()) {
                     entity = this.player;
                 }
             } else if(packet instanceof PlayerSpawnS2CPacket) {
@@ -108,11 +108,9 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             EntityDisguise disguise = (EntityDisguise) entity;
             if(
                     disguise != null /*&&
-                    disguise.isDisguised() /*&&
-                    entity.getEntityId() != this.player.getEntityId()*/ // do not send the packet to the player themselves
+                    disguise.isDisguised()*/
             ) {
                 disguiselib$sendFakePacket(entity, ci);
-                //ci.cancel();
             }
         }
     }
