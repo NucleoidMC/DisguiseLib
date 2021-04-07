@@ -16,8 +16,6 @@ public interface MobSpawnS2CPacketAccessor {
     void setUuid(UUID uuid);
     @Accessor("entityTypeId")
     void setEntityType(int entityTypeId);
-    @Accessor("entityTypeId")
-    int getEntityType();
     @Accessor("x")
     void setX(double x);
     @Accessor("y")

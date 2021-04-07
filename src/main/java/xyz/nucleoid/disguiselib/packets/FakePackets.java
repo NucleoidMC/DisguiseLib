@@ -4,19 +4,43 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.FallingBlockEntity;
-import net.minecraft.entity.ItemEntity;
+import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerSpawnS2CPacket;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
-import xyz.nucleoid.disguiselib.mixin.accessor.PlayerSpawnS2CPacketAccessor;
 import xyz.nucleoid.disguiselib.EntityDisguise;
 import xyz.nucleoid.disguiselib.mixin.accessor.EntitySpawnS2CPacketAccessor;
 import xyz.nucleoid.disguiselib.mixin.accessor.MobSpawnS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.mixin.accessor.PlayerSpawnS2CPacketAccessor;
 
 public class FakePackets {
+    /**
+     * Creates a fake spawn packet for entity.
+     * Make sure entity is disguised, otherwise packet will stay the same.
+     * @param entity entity that requires fake spawn packet
+     * @return fake entity spawn packet (Either player)
+     */
+    public static Packet<?> universalSpawnPacket(Entity entity) {
+        Entity disguise = ((EntityDisguise) entity).getDisguiseEntity();
+        System.out.println("Disg. entity: " + disguise);
+        if(disguise == null)
+            disguise = entity;
+        Packet<?> packet = disguise.createSpawnPacket();
+
+        if(packet instanceof MobSpawnS2CPacket) {
+            packet = fakeMobSpawnS2CPacket(entity);
+        } else if(packet instanceof EntitySpawnS2CPacket) {
+            packet = fakeEntitySpawnS2CPacket(entity);
+        } else if(packet instanceof PlayerSpawnS2CPacket) {
+            packet = fakePlayerSpawnS2CPacket(entity);
+        }
+        System.out.println("Fake packets: " + packet.getClass());
+
+        return packet;
+    }
 
     /**
      * Constructs a fake {@link MobSpawnS2CPacket} for the given entity.

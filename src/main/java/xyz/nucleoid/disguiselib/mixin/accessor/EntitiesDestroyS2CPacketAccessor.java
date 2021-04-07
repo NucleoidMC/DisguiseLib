@@ -8,7 +8,4 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface EntitiesDestroyS2CPacketAccessor {
     @Accessor("entityIds")
     int[] getEntityIds();
-
-    @Accessor("entityIds")
-    void setEntityIds(int[] ids);
 }

@@ -11,9 +11,12 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.packet.s2c.play.*;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.network.ServerPlayerInteractionManager;
 import net.minecraft.server.world.ServerChunkManager;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
@@ -75,6 +78,10 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
 
     @Shadow @Nullable public abstract Text getCustomName();
 
+    @Shadow @Nullable public abstract MinecraftServer getServer();
+
+    @Shadow public abstract boolean isCustomNameVisible();
+
     @Unique
     private boolean disguiselib$disguised, disguiselib$disguiseAlive;
     @Unique
@@ -113,23 +120,10 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         if(entityType == PLAYER) {
             if(this.disguiselib$profile == null)
                 this.disguiselib$profile = new GameProfile(this.uuid, this.getName().getString());
-            //noinspection MixinInnerClass
-            this.disguiselib$disguiseEntity = new PlayerEntity(this.world, this.disguiselib$entity.getBlockPos(), this.getHeadYaw(), this.disguiselib$profile) {
-                @Override
-                public boolean isSpectator() {
-                    return false;
-                }
-
-                @Override
-                public boolean isCreative() {
-                    return false;
-                }
-            };
-            // Showing all skin parts
-            this.disguiselib$disguiseEntity.getDataTracker().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
+            this.disguiselib$constructFakePlayer();
         } else {
-            if(this.disguiselib$disguiseEntity == null)
-                this.disguiselib$disguiseEntity = entityType.create(world);
+            //if(this.disguiselib$disguiseEntity == null)
+            this.disguiselib$disguiseEntity = entityType.create(world);
 
             if(this.disguiselib$profile != null) {
                 // Previous type was player, we have to send a player remove packet
@@ -145,8 +139,10 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
 
         RegistryKey<World> worldRegistryKey = this.world.getRegistryKey();
 
+        // Minor datatracker thingies
         this.disguiselib$disguiseEntity.setNoGravity(true);
         this.disguiselib$disguiseEntity.setCustomName(this.getCustomName());
+        this.disguiselib$disguiseEntity.setCustomNameVisible(this.isCustomNameVisible());
 
         // Updating entity on the client
         manager.sendToDimension(new EntitiesDestroyS2CPacket(this.entityId), worldRegistryKey);
@@ -155,6 +151,17 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         manager.sendToDimension(new EntityTrackerUpdateS2CPacket(this.entityId, this.getDataTracker(), true), worldRegistryKey);
         manager.sendToDimension(new EntityEquipmentUpdateS2CPacket(this.entityId, this.getEquipment()), worldRegistryKey); // Reload equipment
         manager.sendToDimension(new EntitySetHeadYawS2CPacket(this.disguiselib$entity, (byte)((int)(this.getHeadYaw() * 256.0F / 360.0F))), worldRegistryKey); // Head correction
+    }
+
+    /**
+     * Constructs fake player entity for use
+     * when entities are disguised as players.
+     */
+    @Unique
+    private void disguiselib$constructFakePlayer() {
+        this.disguiselib$disguiseEntity = new ServerPlayerEntity(this.getServer(), (ServerWorld) this.world, this.disguiselib$profile, new ServerPlayerInteractionManager((ServerWorld) this.world));
+        // Showing all skin parts
+        this.disguiselib$disguiseEntity.getDataTracker().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
     }
 
     /**
@@ -195,6 +202,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     @Override
     public void removeDisguise() {
         this.disguiseAs(this.getType());
+        System.out.println("Removed disguise; now: " + this.disguiselib$disguiseEntity);
         this.disguiselib$disguised = false;
         this.disguiselib$disguiseEntity = null;
     }
@@ -338,26 +346,13 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             this.disguiselib$disguiseType = Registry.ENTITY_TYPE.get(disguiseTypeId);
             this.disguiselib$disguiseAlive = disguiseTag.getBoolean("DisguiseAlive");
 
-            CompoundTag disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
-            if(!disguiseEntityTag.isEmpty())
-                this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, (entityx) -> entityx);
-
             if(this.disguiselib$disguiseType == PLAYER) {
                 this.disguiselib$profile = new GameProfile(this.uuid, this.getName().getString());
-                //noinspection MixinInnerClass
-                this.disguiselib$disguiseEntity = new PlayerEntity(this.world, this.disguiselib$entity.getBlockPos(), this.getHeadYaw(), this.disguiselib$profile) {
-                    @Override
-                    public boolean isSpectator() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean isCreative() {
-                        return false;
-                    }
-                };
-                // Showing all skin parts
-                this.disguiselib$disguiseEntity.getDataTracker().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
+                this.disguiselib$constructFakePlayer();
+            } else {
+                CompoundTag disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
+                if(!disguiseEntityTag.isEmpty())
+                    this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, (entityx) -> entityx);
             }
         }
     }

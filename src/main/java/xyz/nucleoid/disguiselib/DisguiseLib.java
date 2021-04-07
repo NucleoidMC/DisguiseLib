@@ -9,8 +9,6 @@ import xyz.nucleoid.disguiselib.command.DisguiseCommand;
 
 public class DisguiseLib implements ModInitializer {
 
-	public static final String MODID = "disguiselib";
-
 	/**
 	 * Disables collisions with disguised entities.
 	 * (Client predictions are horrible sometimes ... )

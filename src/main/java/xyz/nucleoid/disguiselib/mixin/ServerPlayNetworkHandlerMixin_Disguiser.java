@@ -96,20 +96,14 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                 Entity original = world.getEntityById(((EntityAttributesS2CPacketAccessor) packet).getEntityId());
                 EntityDisguise entityDisguise = (EntityDisguise) original;
 
-                if(original != null && entityDisguise.isDisguised()) {
-                    /*if(((EntityAttributesS2CPacketAccessor) packet).getEntityId() != this.player.getEntityId()) {
-                        ((EntityAttributesS2CPacketAccessor) packet).setEntityId(entityDisguise.getDisguiseEntity().getEntityId());
-                    } else */if(!entityDisguise.disguiseAlive()) {
-                        ci.cancel();
-                    }
+                if(original != null && entityDisguise.isDisguised() && !entityDisguise.disguiseAlive()) {
+                    ci.cancel();
                     return;
                 }
             }
+
             EntityDisguise disguise = (EntityDisguise) entity;
-            if(
-                    disguise != null /*&&
-                    disguise.isDisguised()*/
-            ) {
+            if(disguise != null) {
                 disguiselib$sendFakePacket(entity, ci);
             }
         }
@@ -125,6 +119,8 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
         GameProfile profile = disguise.getGameProfile();
         Entity disguiseEntity = disguise.getDisguiseEntity();
 
+        Packet<?> spawnPacket = FakePackets.universalSpawnPacket(entity);
+
         this.disguiselib$skipCheck = true;
 
         if(disguise.getDisguiseType() == EntityType.PLAYER) {
@@ -139,39 +135,27 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             // We must treat disguised player differently
             // Why, I hear you ask ..?
             // Well, sending spawn packet of the new entity makes the player not being able to move :(
+            TeamS2CPacket removeTeamPacket = new TeamS2CPacket(DISGUISE_TEAM, 1);
+            this.sendPacket(removeTeamPacket);
+
             if(disguise.getDisguiseType() != EntityType.PLAYER && disguise.isDisguised()) {
                 if(disguiseEntity != null) {
-                    if(disguise.disguiseAlive()) {
-                        MobSpawnS2CPacket packet = FakePackets.fakeMobSpawnS2CPacket(entity);
-                        ((MobSpawnS2CPacketAccessor) packet).setEntityId(disguiseEntity.getEntityId());
-                        this.sendPacket(packet);
-                    } else {
-                        EntitySpawnS2CPacket packet = FakePackets.fakeEntitySpawnS2CPacket(entity);
-                        ((EntitySpawnS2CPacketAccessor) packet).setEntityId(disguiseEntity.getEntityId());
-                        this.sendPacket(packet);
+                    if(spawnPacket instanceof MobSpawnS2CPacket) {
+                        ((MobSpawnS2CPacketAccessor) spawnPacket).setEntityId(disguiseEntity.getEntityId());
+                    } else if(spawnPacket instanceof EntitySpawnS2CPacket) {
+                        ((EntitySpawnS2CPacketAccessor) spawnPacket).setEntityId(disguiseEntity.getEntityId());
                     }
+                    this.sendPacket(spawnPacket);
                     // Disabling collisions with the disguised entity itself
                     TeamS2CPacket addTeamPacket = new TeamS2CPacket(DISGUISE_TEAM, 0); // create team
                     TeamS2CPacket joinTeamPacket = new TeamS2CPacket(DISGUISE_TEAM, Collections.singletonList(this.player.getGameProfile().getName()), 3); // join team
                     this.sendPacket(addTeamPacket);
                     this.sendPacket(joinTeamPacket);
                 }
-            } else {
-                // Removing team
-                TeamS2CPacket removeTeamPacket = new TeamS2CPacket(DISGUISE_TEAM, 1);
-                this.sendPacket(removeTeamPacket);
             }
             ci.cancel();
         } else if(disguise.isDisguised()) {
-            if(disguise.getDisguiseType() == EntityType.PLAYER) {
-                this.sendPacket(FakePackets.fakePlayerSpawnS2CPacket(entity));
-            } else {
-                if(disguise.disguiseAlive()) {
-                    this.sendPacket(FakePackets.fakeMobSpawnS2CPacket(entity));
-                } else {
-                    this.sendPacket(FakePackets.fakeEntitySpawnS2CPacket(entity));
-                }
-            }
+            this.sendPacket(spawnPacket);
             ci.cancel();
         }
         this.disguiselib$skipCheck = false;
