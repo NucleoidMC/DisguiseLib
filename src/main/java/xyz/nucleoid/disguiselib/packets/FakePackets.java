@@ -20,12 +20,13 @@ public class FakePackets {
     /**
      * Creates a fake spawn packet for entity.
      * Make sure entity is disguised, otherwise packet will stay the same.
+     *
      * @param entity entity that requires fake spawn packet
+     *
      * @return fake entity spawn packet (Either player)
      */
     public static Packet<?> universalSpawnPacket(Entity entity) {
         Entity disguise = ((EntityDisguise) entity).getDisguiseEntity();
-        System.out.println("Disg. entity: " + disguise);
         if(disguise == null)
             disguise = entity;
         Packet<?> packet = disguise.createSpawnPacket();
@@ -37,14 +38,15 @@ public class FakePackets {
         } else if(packet instanceof PlayerSpawnS2CPacket) {
             packet = fakePlayerSpawnS2CPacket(entity);
         }
-        System.out.println("Fake packets: " + packet.getClass());
 
         return packet;
     }
 
     /**
      * Constructs a fake {@link MobSpawnS2CPacket} for the given entity.
+     *
      * @param entity entity that requires fake packet
+     *
      * @return fake {@link MobSpawnS2CPacket}
      */
     public static MobSpawnS2CPacket fakeMobSpawnS2CPacket(Entity entity) {
@@ -59,37 +61,40 @@ public class FakePackets {
         accessor.setY(entity.getY());
         accessor.setZ(entity.getZ());
 
-        accessor.setYaw((byte)((int)(entity.yaw * 256.0F / 360.0F)));
-        accessor.setHeadYaw((byte)((int)(entity.getHeadYaw() * 256.0F / 360.0F)));
-        accessor.setPitch((byte)((int)(entity.pitch * 256.0F / 360.0F)));
+        accessor.setYaw((byte) ((int) (entity.yaw * 256.0F / 360.0F)));
+        accessor.setHeadYaw((byte) ((int) (entity.getHeadYaw() * 256.0F / 360.0F)));
+        accessor.setPitch((byte) ((int) (entity.pitch * 256.0F / 360.0F)));
 
         double max = 3.9D;
         Vec3d vec3d = entity.getVelocity();
         double e = MathHelper.clamp(vec3d.x, -max, max);
         double f = MathHelper.clamp(vec3d.y, -max, max);
         double g = MathHelper.clamp(vec3d.z, -max, max);
-        accessor.setVelocityX((int)(e * 8000.0D));
-        accessor.setVelocityY((int)(f * 8000.0D));
-        accessor.setVelocityZ((int)(g * 8000.0D));
+        accessor.setVelocityX((int) (e * 8000.0D));
+        accessor.setVelocityY((int) (f * 8000.0D));
+        accessor.setVelocityZ((int) (g * 8000.0D));
 
         return packet;
     }
 
     /**
      * Constructs a fake {@link EntitySpawnS2CPacket} for the given entity.
+     *
      * @param entity entity that requires fake packet
+     *
      * @return fake {@link EntitySpawnS2CPacket}
      */
     public static EntitySpawnS2CPacket fakeEntitySpawnS2CPacket(Entity entity) {
         EntitySpawnS2CPacket packet = new EntitySpawnS2CPacket(entity);
         EntityDisguise fake = (EntityDisguise) entity;
         ((EntitySpawnS2CPacketAccessor) packet).setEntityType(fake.getDisguiseType());
-        if(fake.getDisguiseType() == EntityType.FALLING_BLOCK && fake.getDisguiseEntity() instanceof FallingBlockEntity)
+        if(fake.getDisguiseType() == EntityType.FALLING_BLOCK && fake.getDisguiseEntity() instanceof FallingBlockEntity) {
             ((EntitySpawnS2CPacketAccessor) packet).setEntityData(
                     Block.getRawIdFromState(
                             ((FallingBlockEntity) fake.getDisguiseEntity()).getBlockState()
                     )
             );
+        }
 
         return packet;
     }
@@ -100,6 +105,7 @@ public class FakePackets {
      * if you're using this for yourself!
      *
      * @param entity entity that requires fake packet
+     *
      * @return fake {@link PlayerSpawnS2CPacket}
      */
     public static PlayerSpawnS2CPacket fakePlayerSpawnS2CPacket(Entity entity) {
@@ -113,8 +119,8 @@ public class FakePackets {
         accessor.setY(entity.getY());
         accessor.setZ(entity.getZ());
 
-        accessor.setYaw((byte)((int)(entity.yaw * 256.0F / 360.0F)));
-        accessor.setPitch((byte)((int)(entity.pitch * 256.0F / 360.0F)));
+        accessor.setYaw((byte) ((int) (entity.yaw * 256.0F / 360.0F)));
+        accessor.setPitch((byte) ((int) (entity.pitch * 256.0F / 360.0F)));
 
         return packet;
     }

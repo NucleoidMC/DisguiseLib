@@ -56,43 +56,53 @@ import static xyz.nucleoid.disguiselib.mixin.accessor.PlayerEntityAccessor.getPL
 public abstract class EntityMixin_Disguise implements EntityDisguise {
 
     @Unique
+    private final Entity disguiselib$entity = (Entity) (Object) this;
+    @Shadow
+    public World world;
+    @Shadow
+    protected UUID uuid;
+    @Unique
     private Entity disguiselib$disguiseEntity;
     @Unique
     private int disguiselib$ticks;
-
-    @Shadow public abstract EntityType<?> getType();
-
-    @Shadow public World world;
-
-    @Shadow private int entityId;
-
-    @Shadow public abstract float getHeadYaw();
-
-    @Shadow protected UUID uuid;
-
-    @Shadow public abstract Text getName();
-
-    @Shadow public abstract int getEntityId();
-
-    @Shadow public abstract DataTracker getDataTracker();
-
-    @Shadow @Nullable public abstract Text getCustomName();
-
-    @Shadow @Nullable public abstract MinecraftServer getServer();
-
-    @Shadow public abstract boolean isCustomNameVisible();
-
+    @Shadow
+    private int entityId;
     @Unique
     private boolean disguiselib$disguised, disguiselib$disguiseAlive;
     @Unique
     private EntityType<?> disguiselib$disguiseType;
     @Unique
-    private final Entity disguiselib$entity = (Entity) (Object) this;
-    @Unique
     private GameProfile disguiselib$profile;
+
+    @Shadow
+    public abstract EntityType<?> getType();
+
+    @Shadow
+    public abstract float getHeadYaw();
+
+    @Shadow
+    public abstract Text getName();
+
+    @Shadow
+    public abstract int getEntityId();
+
+    @Shadow
+    public abstract DataTracker getDataTracker();
+
+    @Shadow
+    @Nullable
+    public abstract Text getCustomName();
+
+    @Shadow
+    @Nullable
+    public abstract MinecraftServer getServer();
+
+    @Shadow
+    public abstract boolean isCustomNameVisible();
 
     /**
      * Tells you the disguised status.
+     *
      * @return true if entity is disguised, otherwise false.
      */
     @Override
@@ -102,6 +112,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
 
     /**
      * Sets entity's disguise from {@link EntityType}
+     *
      * @param entityType the type to disguise this entity into
      */
     @Override
@@ -112,9 +123,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         PlayerManager manager = this.world.getServer().getPlayerManager();
 
         if(this.disguiselib$disguiseEntity != null && this.disguiselib$disguiseEntity.getType() != entityType && this.disguiselib$entity instanceof ServerPlayerEntity) {
-            // Removing previous disguise if this is player
-            // (we have it saved under a separate id)
-            ((ServerPlayerEntity) this.disguiselib$entity).networkHandler.sendPacket(new EntitiesDestroyS2CPacket(this.disguiselib$disguiseEntity.getEntityId()));
+            this.disguiselib$hideSelfView();
         }
 
         if(entityType == PLAYER) {
@@ -122,12 +131,13 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
                 this.disguiselib$profile = new GameProfile(this.uuid, this.getName().getString());
             this.disguiselib$constructFakePlayer();
         } else {
-            //if(this.disguiselib$disguiseEntity == null)
-            this.disguiselib$disguiseEntity = entityType.create(world);
+            // Why null check? Well, if entity was disguised via EntityDisguise#disguiseAs(Entity), this field is already set
+            if(this.disguiselib$disguiseEntity == null)
+                this.disguiselib$disguiseEntity = entityType.create(world);
 
             if(this.disguiselib$profile != null) {
                 // Previous type was player, we have to send a player remove packet
-                PlayerListS2CPacket listPacket = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
+                PlayerListS2CPacket listPacket = new PlayerListS2CPacket(REMOVE_PLAYER);
                 PlayerListS2CPacketAccessor listPacketAccessor = (PlayerListS2CPacketAccessor) listPacket;
                 listPacketAccessor.setEntries(Collections.singletonList(listPacket.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
                 manager.sendToAll(listPacket);
@@ -150,18 +160,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
 
         manager.sendToDimension(new EntityTrackerUpdateS2CPacket(this.entityId, this.getDataTracker(), true), worldRegistryKey);
         manager.sendToDimension(new EntityEquipmentUpdateS2CPacket(this.entityId, this.getEquipment()), worldRegistryKey); // Reload equipment
-        manager.sendToDimension(new EntitySetHeadYawS2CPacket(this.disguiselib$entity, (byte)((int)(this.getHeadYaw() * 256.0F / 360.0F))), worldRegistryKey); // Head correction
-    }
-
-    /**
-     * Constructs fake player entity for use
-     * when entities are disguised as players.
-     */
-    @Unique
-    private void disguiselib$constructFakePlayer() {
-        this.disguiselib$disguiseEntity = new ServerPlayerEntity(this.getServer(), (ServerWorld) this.world, this.disguiselib$profile, new ServerPlayerInteractionManager((ServerWorld) this.world));
-        // Showing all skin parts
-        this.disguiselib$disguiseEntity.getDataTracker().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
+        manager.sendToDimension(new EntitySetHeadYawS2CPacket(this.disguiselib$entity, (byte) ((int) (this.getHeadYaw() * 256.0F / 360.0F))), worldRegistryKey); // Head correction
     }
 
     /**
@@ -171,9 +170,10 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
      */
     @Override
     public void disguiseAs(Entity entity) {
-        if(this.disguiselib$entity instanceof ServerPlayerEntity && this.disguiselib$disguiseEntity != null) {
-            // Removing old disguise entity
-            ((ServerPlayerEntity) this.disguiselib$entity).networkHandler.sendPacket(new EntitiesDestroyS2CPacket(this.disguiselib$disguiseEntity.getEntityId()));
+        if(this.disguiselib$disguiseEntity != null && this.disguiselib$entity instanceof ServerPlayerEntity) {
+            // Removing previous disguise if this is player
+            // (we have it saved under a separate id)
+            this.disguiselib$hideSelfView();
         }
 
         this.disguiselib$disguiseEntity = entity;
@@ -184,31 +184,27 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     }
 
     /**
-     * Gets equipment as list of {@link Pair Pairs}.
-     * Requires entity to be an instanceof {@link LivingEntity}.
-     *
-     * @return equipment list of pairs.
-     */
-    @Unique
-    private List<Pair<EquipmentSlot, ItemStack>> getEquipment() {
-        if(disguiselib$entity instanceof LivingEntity)
-            return Arrays.stream(EquipmentSlot.values()).map(slot -> new Pair<>(slot, ((LivingEntity) disguiselib$entity).getEquippedStack(slot))).collect(Collectors.toList());
-        return Collections.emptyList();
-    }
-
-    /**
      * Clears the disguise - sets the {@link EntityMixin_Disguise#disguiselib$disguiseType} back to original.
      */
     @Override
     public void removeDisguise() {
+        if(this.disguiselib$disguiseEntity != null && this.disguiselib$entity instanceof ServerPlayerEntity) {
+            // Removing previous disguise if this is player
+            // (we have it saved under a separate id)
+            this.disguiselib$hideSelfView();
+        }
+        // Disguising entity as itself
+        this.disguiselib$disguiseEntity = null;
         this.disguiseAs(this.getType());
-        System.out.println("Removed disguise; now: " + this.disguiselib$disguiseEntity);
+
+        // Setting as not-disguised
         this.disguiselib$disguised = false;
         this.disguiselib$disguiseEntity = null;
     }
 
     /**
      * Gets the disguise entity type
+     *
      * @return disguise entity type or real type if there's no disguise
      */
     @Override
@@ -229,6 +225,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
 
     /**
      * Whether disguise type entity is an instance of {@link LivingEntity}.
+     *
      * @return true whether the disguise type is an instance of {@link LivingEntity}, otherwise false.
      */
     @Override
@@ -237,25 +234,37 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     }
 
     /**
-     * Sets the GameProfile
-     *
-     * @param gameProfile a new profile for the entity.
+     * Hides player's self-disguise-entity
      */
-    @Override
-    public void setGameProfile(@Nullable GameProfile gameProfile) {
-        this.disguiselib$profile = gameProfile;
-        this.disguiselib$sendProfileUpdates();
+    @Unique
+    private void disguiselib$hideSelfView() {
+        // Removing previous disguise if this is player
+        // (we have it saved under a separate id)
+        ((ServerPlayerEntity) this.disguiselib$entity).networkHandler.sendPacket(new EntitiesDestroyS2CPacket(this.disguiselib$disguiseEntity.getEntityId()));
     }
 
     /**
-     * Gets the {@link GameProfile} for disguised entity,
-     * used when disguising as player.
-     *
-     * @return GameProfile of the entity.
+     * Constructs fake player entity for use
+     * when entities are disguised as players.
      */
-    @Override
-    public @Nullable GameProfile getGameProfile() {
-        return this.disguiselib$profile;
+    @Unique
+    private void disguiselib$constructFakePlayer() {
+        this.disguiselib$disguiseEntity = new ServerPlayerEntity(this.getServer(), (ServerWorld) this.world, this.disguiselib$profile, new ServerPlayerInteractionManager((ServerWorld) this.world));
+        // Showing all skin parts
+        this.disguiselib$disguiseEntity.getDataTracker().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
+    }
+
+    /**
+     * Gets equipment as list of {@link Pair Pairs}.
+     * Requires entity to be an instanceof {@link LivingEntity}.
+     *
+     * @return equipment list of pairs.
+     */
+    @Unique
+    private List<Pair<EquipmentSlot, ItemStack>> getEquipment() {
+        if(disguiselib$entity instanceof LivingEntity)
+            return Arrays.stream(EquipmentSlot.values()).map(slot -> new Pair<>(slot, ((LivingEntity) disguiselib$entity).getEquippedStack(slot))).collect(Collectors.toList());
+        return Collections.emptyList();
     }
 
     /**
@@ -280,8 +289,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         if(trackerEntry != null)
             trackerEntry.getTrackingPlayers().forEach(tracking -> trackerEntry.getEntry().startTracking(tracking));
     }
-
-    /**
+/**
      * Sends additional move packets to the client if
      * entity is disguised.
      * Prevents client desync and fixes "blocky" movement.
@@ -304,9 +312,18 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             }
         }
 
+    }/**
+     * Sets the GameProfile
+     *
+     * @param gameProfile a new profile for the entity.
+     */
+    @Override
+    public void setGameProfile(@Nullable GameProfile gameProfile) {
+        this.disguiselib$profile = gameProfile;
+        this.disguiselib$sendProfileUpdates();
     }
 
-    /**
+        /**
      * If entity is disguised as player, we need to send a player
      * remove packet on death as well, otherwise tablist still contains
      * it.
@@ -318,7 +335,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
     private void onRemove(CallbackInfo ci) {
         if(this.isDisguised() && this.disguiselib$profile != null) {
             // If entity was killed, we should also send a remove player action packet
-            PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
+            PlayerListS2CPacket packet = new PlayerListS2CPacket(REMOVE_PLAYER);
             PlayerListS2CPacketAccessor listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
 
             GameProfile profile = new GameProfile(this.disguiselib$entity.getUuid(), this.getName().getString());
@@ -328,9 +345,9 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             manager.sendToAll(packet);
         }
     }
-
     /**
      * Takes care of loading the fake entity data from tag.
+     *
      * @param tag tag to load data from.
      */
     @Inject(
@@ -355,10 +372,20 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
                     this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, (entityx) -> entityx);
             }
         }
+    }/**
+     * Gets the {@link GameProfile} for disguised entity,
+     * used when disguising as player.
+     *
+     * @return GameProfile of the entity.
+     */
+    @Override
+    public @Nullable GameProfile getGameProfile() {
+        return this.disguiselib$profile;
     }
 
     /**
      * Takes care of saving the fake entity data to tag.
+     *
      * @param tag tag to save data to.
      */
     @Inject(
@@ -385,4 +412,12 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             tag.put("DisguiseLib", disguiseTag);
         }
     }
+
+
+
+
+
+
+
+
 }
