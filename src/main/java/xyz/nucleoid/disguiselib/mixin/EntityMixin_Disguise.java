@@ -36,7 +36,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import xyz.nucleoid.disguiselib.EntityDisguise;
+import xyz.nucleoid.disguiselib.casts.DisguiseMethods;
+import xyz.nucleoid.disguiselib.casts.EntityDisguise;
 import xyz.nucleoid.disguiselib.mixin.accessor.EntityTrackerEntryAccessor;
 import xyz.nucleoid.disguiselib.mixin.accessor.PlayerListS2CPacketAccessor;
 import xyz.nucleoid.disguiselib.mixin.accessor.ThreadedAnvilChunkStorageAccessor;
@@ -53,7 +54,7 @@ import static net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action.R
 import static xyz.nucleoid.disguiselib.mixin.accessor.PlayerEntityAccessor.getPLAYER_MODEL_PARTS;
 
 @Mixin(Entity.class)
-public abstract class EntityMixin_Disguise implements EntityDisguise {
+public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMethods {
 
     @Unique
     private final Entity disguiselib$entity = (Entity) (Object) this;
@@ -150,16 +151,14 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         RegistryKey<World> worldRegistryKey = this.world.getRegistryKey();
 
         // Minor datatracker thingies
-        this.disguiselib$disguiseEntity.setNoGravity(true);
-        this.disguiselib$disguiseEntity.setCustomName(this.getCustomName());
-        this.disguiselib$disguiseEntity.setCustomNameVisible(this.isCustomNameVisible());
+        this.updateTrackedData();
 
         // Updating entity on the client
         manager.sendToDimension(new EntitiesDestroyS2CPacket(this.entityId), worldRegistryKey);
         manager.sendToDimension(new EntitySpawnS2CPacket(this.disguiselib$entity), worldRegistryKey); // will be replaced by network handler
 
         manager.sendToDimension(new EntityTrackerUpdateS2CPacket(this.entityId, this.getDataTracker(), true), worldRegistryKey);
-        manager.sendToDimension(new EntityEquipmentUpdateS2CPacket(this.entityId, this.getEquipment()), worldRegistryKey); // Reload equipment
+        manager.sendToDimension(new EntityEquipmentUpdateS2CPacket(this.entityId, this.disguiselib$getEquipment()), worldRegistryKey); // Reload equipment
         manager.sendToDimension(new EntitySetHeadYawS2CPacket(this.disguiselib$entity, (byte) ((int) (this.getHeadYaw() * 256.0F / 360.0F))), worldRegistryKey); // Head correction
     }
 
@@ -261,7 +260,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
      * @return equipment list of pairs.
      */
     @Unique
-    private List<Pair<EquipmentSlot, ItemStack>> getEquipment() {
+    private List<Pair<EquipmentSlot, ItemStack>> disguiselib$getEquipment() {
         if(disguiselib$entity instanceof LivingEntity)
             return Arrays.stream(EquipmentSlot.values()).map(slot -> new Pair<>(slot, ((LivingEntity) disguiselib$entity).getEquippedStack(slot))).collect(Collectors.toList());
         return Collections.emptyList();
@@ -288,6 +287,20 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         EntityTrackerEntryAccessor trackerEntry = ((ThreadedAnvilChunkStorageAccessor) storage).getEntityTrackers().get(this.getEntityId());
         if(trackerEntry != null)
             trackerEntry.getTrackingPlayers().forEach(tracking -> trackerEntry.getEntry().startTracking(tracking));
+    }
+
+    /**
+     * Updates custom name and its visibility.
+     * Also sets no-gravity to true in order
+     * to prevent the client from predicting
+     * the entity position and velocity.
+     */
+    @Override
+    public void updateTrackedData() {
+        // Minor datatracker thingies
+        this.disguiselib$disguiseEntity.setNoGravity(true);
+        this.disguiselib$disguiseEntity.setCustomName(this.getCustomName());
+        this.disguiselib$disguiseEntity.setCustomNameVisible(this.isCustomNameVisible());
     }
     /**
      * Sends additional move packets to the client if

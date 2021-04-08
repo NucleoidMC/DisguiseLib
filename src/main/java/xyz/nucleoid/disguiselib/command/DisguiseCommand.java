@@ -11,7 +11,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.Identifier;
-import xyz.nucleoid.disguiselib.EntityDisguise;
+import xyz.nucleoid.disguiselib.casts.EntityDisguise;
 
 import static net.minecraft.command.argument.EntityArgumentType.entity;
 import static net.minecraft.command.suggestion.SuggestionProviders.SUMMONABLE_ENTITIES;

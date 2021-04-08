@@ -20,7 +20,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import xyz.nucleoid.disguiselib.EntityDisguise;
+import xyz.nucleoid.disguiselib.casts.DisguiseMethods;
+import xyz.nucleoid.disguiselib.casts.EntityDisguise;
 import xyz.nucleoid.disguiselib.mixin.accessor.*;
 import xyz.nucleoid.disguiselib.packets.FakePackets;
 
@@ -82,6 +83,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                     if(disguised != null) {
                         if(((EntityTrackerUpdateS2CPacketAccessor) packet).getEntityId() != this.player.getEntityId()) {
                             // Only change the content if entity is disguised
+                            ((DisguiseMethods) original).updateTrackedData();
                             List<DataTracker.Entry<?>> trackedValues = disguised.getDataTracker().getAllEntries();
                             ((EntityTrackerUpdateS2CPacketAccessor) packet).setTrackedValues(trackedValues);
                         } else {
@@ -139,6 +141,14 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             this.sendPacket(removeTeamPacket);
 
             if(disguise.getDisguiseType() != EntityType.PLAYER && disguise.isDisguised()) {
+
+                PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
+                //noinspection ConstantConditions
+                PlayerListS2CPacketAccessor listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
+                listS2CPacketAccessor.setEntries(Collections.singletonList(packet.new Entry(profile, 0, GameMode.SURVIVAL, new LiteralText(profile.getName()))));
+
+                this.sendPacket(packet);
+
                 if(disguiseEntity != null) {
                     if(spawnPacket instanceof MobSpawnS2CPacket) {
                         ((MobSpawnS2CPacketAccessor) spawnPacket).setEntityId(disguiseEntity.getEntityId());

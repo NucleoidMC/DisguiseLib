@@ -1,4 +1,4 @@
-package xyz.nucleoid.disguiselib;
+package xyz.nucleoid.disguiselib.casts;
 
 import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.Entity;

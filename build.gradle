@@ -34,7 +34,7 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	// Why did my command fail
-	modImplementation 'io.github.bymartrixx.wdmcf:wdmcf:1.0.1'
+	modRuntime 'io.github.bymartrixx.wdmcf:wdmcf:1.0.1'
 }
 
 processResources {
