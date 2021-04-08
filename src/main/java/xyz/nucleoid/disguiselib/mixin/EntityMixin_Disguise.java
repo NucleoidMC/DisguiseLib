@@ -233,6 +233,28 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
     }
 
     /**
+     * Gets the {@link GameProfile} for disguised entity,
+     * used when disguising as player.
+     *
+     * @return GameProfile of the entity.
+     */
+    @Override
+    public @Nullable GameProfile getGameProfile() {
+        return this.disguiselib$profile;
+    }
+
+    /**
+     * Sets the GameProfile
+     *
+     * @param gameProfile a new profile for the entity.
+     */
+    @Override
+    public void setGameProfile(@Nullable GameProfile gameProfile) {
+        this.disguiselib$profile = gameProfile;
+        this.disguiselib$sendProfileUpdates();
+    }
+
+    /**
      * Hides player's self-disguise-entity
      */
     @Unique
@@ -302,6 +324,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
         this.disguiselib$disguiseEntity.setCustomName(this.getCustomName());
         this.disguiselib$disguiseEntity.setCustomNameVisible(this.isCustomNameVisible());
     }
+
     /**
      * Sends additional move packets to the client if
      * entity is disguised.
@@ -325,18 +348,9 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
             }
         }
 
-    }/**
-     * Sets the GameProfile
-     *
-     * @param gameProfile a new profile for the entity.
-     */
-    @Override
-    public void setGameProfile(@Nullable GameProfile gameProfile) {
-        this.disguiselib$profile = gameProfile;
-        this.disguiselib$sendProfileUpdates();
     }
 
-        /**
+    /**
      * If entity is disguised as player, we need to send a player
      * remove packet on death as well, otherwise tablist still contains
      * it.
@@ -358,6 +372,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
             manager.sendToAll(packet);
         }
     }
+
     /**
      * Takes care of loading the fake entity data from tag.
      *
@@ -385,15 +400,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
                     this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, (entityx) -> entityx);
             }
         }
-    }/**
-     * Gets the {@link GameProfile} for disguised entity,
-     * used when disguising as player.
-     *
-     * @return GameProfile of the entity.
-     */
-    @Override
-    public @Nullable GameProfile getGameProfile() {
-        return this.disguiselib$profile;
     }
 
     /**
@@ -425,12 +431,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
             tag.put("DisguiseLib", disguiseTag);
         }
     }
-
-
-
-
-
-
 
 
 }

@@ -10,17 +10,21 @@ public interface EntityDisguise {
 
     /**
      * Tells you the disguised status.
+     *
      * @return true if entity is disguised, otherwise false.
      */
     boolean isDisguised();
 
     /**
      * Sets entity's disguise from {@link EntityType}
+     *
      * @param entityType the type to disguise this entity into
      */
     void disguiseAs(EntityType<?> entityType);
+
     /**
      * Sets entity's disguise from {@link EntityType}
+     *
      * @param entity the entity to disguise into
      */
     void disguiseAs(Entity entity);
@@ -32,12 +36,14 @@ public interface EntityDisguise {
 
     /**
      * Gets the disguise entity type
+     *
      * @return disguise entity type or real type if there's no disguise
      */
     EntityType<?> getDisguiseType();
 
     /**
      * Gets the disguise entity.
+     *
      * @return disguise entity or null if there's no disguise
      */
     @Nullable
@@ -45,16 +51,10 @@ public interface EntityDisguise {
 
     /**
      * Whether disguise type entity is an instance of {@link LivingEntity}.
+     *
      * @return true whether the disguise type is an instance of {@link LivingEntity}, otherwise false.
      */
     boolean disguiseAlive();
-
-    /**
-     * Sets the GameProfile
-     *
-     * @param gameProfile a new profile for the entity.
-     */
-    void setGameProfile(@Nullable GameProfile gameProfile);
 
     /**
      * Gets the {@link GameProfile} for disguised entity,
@@ -63,4 +63,11 @@ public interface EntityDisguise {
      * @return GameProfile of the entity.
      */
     @Nullable GameProfile getGameProfile();
+
+    /**
+     * Sets the GameProfile
+     *
+     * @param gameProfile a new profile for the entity.
+     */
+    void setGameProfile(@Nullable GameProfile gameProfile);
 }
