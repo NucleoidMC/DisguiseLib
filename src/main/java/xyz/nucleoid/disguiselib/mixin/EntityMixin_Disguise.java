@@ -132,7 +132,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
             this.disguiselib$constructFakePlayer();
         } else {
             // Why null check? Well, if entity was disguised via EntityDisguise#disguiseAs(Entity), this field is already set
-            if(this.disguiselib$disguiseEntity == null)
+            if(this.disguiselib$disguiseEntity == null || this.disguiselib$disguiseEntity.getType() != entityType)
                 this.disguiselib$disguiseEntity = entityType.create(world);
 
             if(this.disguiselib$profile != null) {
@@ -289,7 +289,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise {
         if(trackerEntry != null)
             trackerEntry.getTrackingPlayers().forEach(tracking -> trackerEntry.getEntry().startTracking(tracking));
     }
-/**
+    /**
      * Sends additional move packets to the client if
      * entity is disguised.
      * Prevents client desync and fixes "blocky" movement.
