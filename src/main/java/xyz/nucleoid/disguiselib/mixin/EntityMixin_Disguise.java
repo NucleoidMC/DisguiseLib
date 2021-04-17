@@ -140,7 +140,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
                 // Previous type was player, we have to send a player remove packet
                 PlayerListS2CPacket listPacket = new PlayerListS2CPacket(REMOVE_PLAYER);
                 PlayerListS2CPacketAccessor listPacketAccessor = (PlayerListS2CPacketAccessor) listPacket;
-                listPacketAccessor.setEntries(Collections.singletonList(listPacket.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
+                listPacketAccessor.setEntries(Arrays.asList(listPacket.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
                 manager.sendToAll(listPacket);
             }
             this.disguiselib$profile = null;
@@ -296,7 +296,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
         PlayerListS2CPacket packet = new PlayerListS2CPacket();
         //noinspection ConstantConditions
         PlayerListS2CPacketAccessor accessor = (PlayerListS2CPacketAccessor) packet;
-        accessor.setEntries(Collections.singletonList(packet.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
+        accessor.setEntries(Arrays.asList(packet.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
 
         PlayerManager playerManager = this.world.getServer().getPlayerManager();
         accessor.setAction(REMOVE_PLAYER);
@@ -366,7 +366,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
             PlayerListS2CPacketAccessor listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
 
             GameProfile profile = new GameProfile(this.disguiselib$entity.getUuid(), this.getName().getString());
-            listS2CPacketAccessor.setEntries(Collections.singletonList(packet.new Entry(profile, 0, GameMode.SURVIVAL, this.getName())));
+            listS2CPacketAccessor.setEntries(Arrays.asList(packet.new Entry(profile, 0, GameMode.SURVIVAL, this.getName())));
 
             PlayerManager manager = this.world.getServer().getPlayerManager();
             manager.sendToAll(packet);

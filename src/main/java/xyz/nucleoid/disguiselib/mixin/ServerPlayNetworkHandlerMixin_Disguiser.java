@@ -25,7 +25,7 @@ import xyz.nucleoid.disguiselib.casts.EntityDisguise;
 import xyz.nucleoid.disguiselib.mixin.accessor.*;
 import xyz.nucleoid.disguiselib.packets.FakePackets;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import static xyz.nucleoid.disguiselib.DisguiseLib.DISGUISE_TEAM;
@@ -112,7 +112,9 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
     }
 
     /**
-     * Sends fake packet instead of the real one
+     * Sends fake packet instead of the real one.
+     * Arrays.asList is used as it returns mutable map, otherwise
+     * this packet can cause some issues with other mods.
      * @param entity the entity that is disguised and needs to have a custom packet sent.
      */
     @Unique
@@ -129,7 +131,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER);
             //noinspection ConstantConditions
             PlayerListS2CPacketAccessor listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
-            listS2CPacketAccessor.setEntries(Collections.singletonList(packet.new Entry(profile, 0, GameMode.SURVIVAL, new LiteralText(profile.getName()))));
+            listS2CPacketAccessor.setEntries(Arrays.asList(packet.new Entry(profile, 0, GameMode.SURVIVAL, new LiteralText(profile.getName()))));
 
             this.sendPacket(packet);
         }
@@ -145,7 +147,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                 PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
                 //noinspection ConstantConditions
                 PlayerListS2CPacketAccessor listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
-                listS2CPacketAccessor.setEntries(Collections.singletonList(packet.new Entry(profile, 0, GameMode.SURVIVAL, new LiteralText(profile.getName()))));
+                listS2CPacketAccessor.setEntries(Arrays.asList(packet.new Entry(profile, 0, GameMode.SURVIVAL, new LiteralText(profile.getName()))));
 
                 this.sendPacket(packet);
 
@@ -158,7 +160,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                     this.sendPacket(spawnPacket);
                     // Disabling collisions with the disguised entity itself
                     TeamS2CPacket addTeamPacket = new TeamS2CPacket(DISGUISE_TEAM, 0); // create team
-                    TeamS2CPacket joinTeamPacket = new TeamS2CPacket(DISGUISE_TEAM, Collections.singletonList(this.player.getGameProfile().getName()), 3); // join team
+                    TeamS2CPacket joinTeamPacket = new TeamS2CPacket(DISGUISE_TEAM, Arrays.asList(this.player.getGameProfile().getName()), 3); // join team
                     this.sendPacket(addTeamPacket);
                     this.sendPacket(joinTeamPacket);
                 }

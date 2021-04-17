@@ -20,19 +20,31 @@ dependencies {
 Use the provided interface `EntityDisguise` on any class extending `net.minecraft.entity.Entity`.
 
 ```java
-// Disguises as creeper
-((EntityDisguise) entity).disguiseAs(EntityType.CREEPER);
+import xyz.nucleoid.disguiselib.casts.EntityDisguise;
 
-// Disguise as aCustomEntity (net.minecraft.entity)
-((EntityDisguise) entity).disguiseAs(aCustomEntity);
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 
+public class MyDisguises {
+    public static void disguise() {
+        // Disguises as creeper
+        ((EntityDisguise) entityToDisguise).disguiseAs(EntityType.CREEPER);
+
+        // Disguise as aCustomEntity (net.minecraft.entity)
+        ((EntityDisguise) entityToDisguise).disguiseAs(aCustomEntity);
+
+        // If you disguise it as EntityType.PLAYER, you can apply custom GameProfile as well
+        ((EntityDisguise) entityToDisguise).setGameProfile(aCustomGameProfile);
+
+        ((EntityDisguise) entityToDisguise).isDisguised(); // Tells whether entity is disguised or not
+        ((EntityDisguise) entityToDisguise).removeDisguise(); // Clears the disguise
 
         
-((EntityDisguise) entity).isDisguised(); // Tells whether entity is disguised or not
-((EntityDisguise) entity).removeDisguise(); // Clears the disguise
+        // Not that useful (mainly for internal use)
+        ((EntityDisguise) entityToDisguise).getDisguiseType(); // Gets the EntityType of the disguise
+        ((EntityDisguise) entityToDisguise).disguiseAlive(); // Whether the entity from the disguise is an instance of LivingEntity
+    }    
+}
 
-// Not that useful (mainly for internal use)
-((EntityDisguise) entity).getDisguiseType(); // Gets the EntityType of the disguise
-((EntityDisguise) entity).disguiseAlive(); // Whether the entity from the disguise is an instance of LivingEntity
 ```
 
