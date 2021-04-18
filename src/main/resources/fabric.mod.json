@@ -26,6 +26,14 @@
     "disguiselib.mixins.json"
   ],
 
+  "custom": {
+    "modmenu": {
+      "badges": [
+        "library"
+      ]
+    }
+  },
+
   "depends": {
     "fabricloader": ">=0.7.4",
     "fabric": "*"
