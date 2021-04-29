@@ -13,13 +13,13 @@
     "sources": "https://github.com/NucleoidMC/DisguiseLib"
   },
 
-  "license": "CC0-1.0",
+  "license": "MIT",
   "icon": "assets/disguiselib/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
-      "xyz.nucleoid.disguiselib.DisguiseLib"
+      "xyz.nucleoid.disguiselib.DisguiseLibFabric"
     ]
   },
   "mixins": [
