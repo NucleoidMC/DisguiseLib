@@ -14,12 +14,12 @@
   },
 
   "license": "MIT",
-  "icon": "assets/disguiselib/icon.png",
+  "icon": "icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
-      "xyz.nucleoid.disguiselib.DisguiseLibFabric"
+      "xyz.nucleoid.disguiselib.DisguiseLib::init"
     ]
   },
   "mixins": [
