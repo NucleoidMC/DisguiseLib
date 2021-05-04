@@ -1,7 +1,8 @@
 # Disguise Lib
 
 A server-side library that allows disguising entities as other ones.
-Features built-in `/disguise` command as well.
+~~Features built-in `/disguise` command as well.~~
+[`/disguise` command with some other features has been moved to a separate mod.](https://github.com/samolego/MobDisguises)
 
 ## Dependecy
 ```gradle
@@ -9,10 +10,26 @@ repositories {
 	maven {
 		url 'https://maven.nucleoid.xyz'
 	}
+	// OR
+	maven {
+        url 'https://jitpack.io'
+    }
 }
 
 dependencies {
-  modImplementation "xyz.nucleoid:DisguiseLib:${project.disguiselib_version}"
+    // fabric
+    modImplementation "xyz.nucleoid:DisguiseLib:${project.disguiselib_version}"
+  
+    // jitpack - architectury
+        // Architectury (common module)
+    modImplementation "xyz.nucleoid:DisguiseLib:disguiselib:${project.disguiselib_version}"
+    
+    // Fabric
+    modImplementation "xyz.nucleoid:DisguiseLib:disguiselib-fabric:${project.disguiselib_version}"
+    
+    // Forge
+    implementation fg.deobf "xyz.nucleoid:DisguiseLib:disguiselib:${project.disguiselib_version}"
+  
 }
 ```
 # API
