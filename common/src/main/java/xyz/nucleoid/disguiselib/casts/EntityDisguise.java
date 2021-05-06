@@ -3,7 +3,6 @@ package xyz.nucleoid.disguiselib.casts;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 
 public interface EntityDisguise {
@@ -50,11 +49,22 @@ public interface EntityDisguise {
     Entity getDisguiseEntity();
 
     /**
-     * Whether disguise type entity is an instance of {@link LivingEntity}.
+     * Whether this entity can bypass the
+     * "disguises" and see entities normally
+     * Intended more for admins (to not get trolled themselves).
      *
-     * @return true whether the disguise type is an instance of {@link LivingEntity}, otherwise false.
+     * @return if entity can be "fooled" by disguise
      */
-    boolean disguiseAlive();
+    boolean hasTrueSight();
+
+    /**
+     * Toggles true sight - whether entity
+     * can see disguises or not.
+     * Intended more for admins (to not get trolled themselves).
+     *
+     * @param trueSight if entity should not see disguises
+     */
+    void setTrueSight(boolean trueSight);
 
     /**
      * Gets the {@link GameProfile} for disguised entity,

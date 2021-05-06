@@ -22,7 +22,6 @@ public class FakePackets {
      * Make sure entity is disguised, otherwise packet will stay the same.
      *
      * @param entity entity that requires fake spawn packet
-     *
      * @return fake entity spawn packet (Either player)
      */
     public static Packet<?> universalSpawnPacket(Entity entity) {

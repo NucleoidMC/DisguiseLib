@@ -2,11 +2,9 @@ package xyz.nucleoid.disguiselib.mixin;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Pair;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.*;
 import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
@@ -24,10 +22,12 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.source.BiomeAccess;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import xyz.nucleoid.disguiselib.casts.DisguiseMethods;
+import xyz.nucleoid.disguiselib.casts.DisguiseUtils;
 import xyz.nucleoid.disguiselib.casts.EntityDisguise;
 import xyz.nucleoid.disguiselib.mixin.accessor.EntityTrackerEntryAccessor;
 import xyz.nucleoid.disguiselib.mixin.accessor.PlayerListS2CPacketAccessor;
@@ -54,7 +54,7 @@ import static net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action.R
 import static xyz.nucleoid.disguiselib.mixin.accessor.PlayerEntityAccessor.getPLAYER_MODEL_PARTS;
 
 @Mixin(Entity.class)
-public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMethods {
+public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUtils {
 
     @Unique
     private final Entity disguiselib$entity = (Entity) (Object) this;
@@ -74,6 +74,8 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
     private EntityType<?> disguiselib$disguiseType;
     @Unique
     private GameProfile disguiselib$profile;
+    @Unique
+    private boolean disguiselib$trueSight = false;
 
     @Shadow
     public abstract EntityType<?> getType();
@@ -101,6 +103,22 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
     @Shadow
     public abstract boolean isCustomNameVisible();
 
+    @Shadow public abstract boolean isSprinting();
+
+    @Shadow public abstract boolean isSneaking();
+
+    @Shadow public abstract boolean isSwimming();
+
+    @Shadow public abstract boolean isGlowing();
+
+    @Shadow public abstract int getFireTicks();
+
+    @Shadow public abstract boolean isSilent();
+
+    @Shadow public abstract Vec3d getPos();
+
+    @Shadow public abstract EntityPose getPose();
+
     /**
      * Tells you the disguised status.
      *
@@ -118,6 +136,8 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
      */
     @Override
     public void disguiseAs(EntityType<?> entityType) {
+        if(!(this.disguiselib$entity instanceof ServerPlayerEntity))
+            return; //todo remove test only
         this.disguiselib$disguised = true;
         this.disguiselib$disguiseType = entityType;
 
@@ -233,6 +253,30 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
     }
 
     /**
+     * Whether this entity can bypass the
+     * "disguises" and see entities normally
+     * Intended more for admins (to not get trolled themselves).
+     *
+     * @return if entity can be "fooled" by disguise
+     */
+    @Override
+    public boolean hasTrueSight() {
+        return this.disguiselib$trueSight;
+    }
+
+    /**
+     * Toggles true sight - whether entity
+     * can see disguises or not.
+     * Intended more for admins (to not get trolled themselves).
+     *
+     * @param trueSight if entity should not see disguises
+     */
+    @Override
+    public void setTrueSight(boolean trueSight) {
+        this.disguiselib$trueSight = trueSight;
+    }
+
+    /**
      * Gets the {@link GameProfile} for disguised entity,
      * used when disguising as player.
      *
@@ -309,6 +353,37 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
         EntityTrackerEntryAccessor trackerEntry = ((ThreadedAnvilChunkStorageAccessor) storage).getEntityTrackers().get(this.getEntityId());
         if(trackerEntry != null)
             trackerEntry.getTrackingPlayers().forEach(tracking -> trackerEntry.getEntry().startTracking(tracking));
+
+        // Changing entity on client
+        if(this.disguiselib$entity instanceof ServerPlayerEntity) {
+            ServerPlayerEntity player = (ServerPlayerEntity) this.disguiselib$entity;
+            ServerWorld targetWorld = player.getServerWorld();
+
+            player.networkHandler.sendPacket(new PlayerRespawnS2CPacket(
+                    targetWorld.getDimension(),
+                    targetWorld.getRegistryKey(),
+                    BiomeAccess.hashSeed(targetWorld.getSeed()),
+                    player.interactionManager.getGameMode(),
+                    player.interactionManager.getPreviousGameMode(),
+                    targetWorld.isDebugWorld(),
+                    targetWorld.isFlat(),
+                    true
+            ));
+            player.networkHandler.requestTeleport(player.getX(), player.getY(), player.getZ(), player.yaw, player.pitch);
+
+            player.server.getPlayerManager().sendCommandTree(player);
+
+            player.networkHandler.sendPacket(new ExperienceBarUpdateS2CPacket(player.experienceProgress, player.totalExperience, player.experienceLevel));
+            player.networkHandler.sendPacket(new HealthUpdateS2CPacket(player.getHealth(), player.getHungerManager().getFoodLevel(), player.getHungerManager().getSaturationLevel()));
+
+            for (StatusEffectInstance statusEffect : player.getStatusEffects()) {
+                player.networkHandler.sendPacket(new EntityStatusEffectS2CPacket(player.getEntityId(), statusEffect));
+            }
+
+            player.sendAbilitiesUpdate();
+            playerManager.sendWorldInfo(player, targetWorld);
+            playerManager.sendPlayerStatus(player);
+        }
     }
 
     /**
@@ -323,6 +398,13 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
         this.disguiselib$disguiseEntity.setNoGravity(true);
         this.disguiselib$disguiseEntity.setCustomName(this.getCustomName());
         this.disguiselib$disguiseEntity.setCustomNameVisible(this.isCustomNameVisible());
+        this.disguiselib$disguiseEntity.setSprinting(this.isSprinting());
+        this.disguiselib$disguiseEntity.setSneaking(this.isSneaking());
+        this.disguiselib$disguiseEntity.setSwimming(this.isSwimming());
+        this.disguiselib$disguiseEntity.setGlowing(this.isGlowing());
+        this.disguiselib$disguiseEntity.setFireTicks(this.getFireTicks());
+        this.disguiselib$disguiseEntity.setSilent(this.isSilent());
+        this.disguiselib$disguiseEntity.setPose(this.getPose());
     }
 
     /**
@@ -431,6 +513,4 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseMe
             tag.put("DisguiseLib", disguiseTag);
         }
     }
-
-
 }
