@@ -22,7 +22,6 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.GameMode;
@@ -115,8 +114,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
     @Shadow public abstract boolean isSilent();
 
-    @Shadow public abstract Vec3d getPos();
-
     @Shadow public abstract EntityPose getPose();
 
     /**
@@ -136,8 +133,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Override
     public void disguiseAs(EntityType<?> entityType) {
-        if(!(this.disguiselib$entity instanceof ServerPlayerEntity))
-            return; //todo remove test only
         this.disguiselib$disguised = true;
         this.disguiselib$disguiseType = entityType;
 
