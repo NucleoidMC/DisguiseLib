@@ -6,6 +6,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
@@ -14,7 +15,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -41,8 +41,6 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
     private int disguiselib$qTimer;
 
     @Shadow public abstract void sendPacket(Packet<?> packet);
-
-    @Shadow public abstract void sendPacket(Packet<?> packet, @Nullable GenericFutureListener<? extends Future<? super Void>> listener);
 
     /**
      * Checks the packet that was sent. If the entity in the packet is disguised, the
@@ -153,13 +151,15 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
 
             this.sendPacket(packet);
 
+            if(!(entity instanceof PlayerEntity)) {
+                packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
+                //noinspection ConstantConditions
+                listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
+                listS2CPacketAccessor.setEntries(Arrays.asList(packet.new Entry(profile, 0, GameMode.SURVIVAL, new LiteralText(profile.getName()))));
 
-            packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
-            //noinspection ConstantConditions
-            listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
-            listS2CPacketAccessor.setEntries(Arrays.asList(packet.new Entry(profile, 0, GameMode.SURVIVAL, new LiteralText(profile.getName()))));
-
-            this.disguiselib$q.add(packet);
+                this.disguiselib$q.add(packet);
+                this.disguiselib$qTimer = 50;
+            }
         }
         if(entity.getEntityId() == this.player.getEntityId()) {
             // We must treat disguised player differently
@@ -224,6 +224,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
         if(!this.disguiselib$q.isEmpty() && --this.disguiselib$qTimer <= 0) {
             this.disguiselib$skipCheck = true;
             this.disguiselib$q.forEach(this::sendPacket);
+            this.disguiselib$q.clear();
             this.disguiselib$skipCheck = false;
         }
     }

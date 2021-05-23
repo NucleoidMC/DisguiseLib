@@ -18,4 +18,8 @@ public class DisguiseLib {
 		DISGUISE_TEAM.setCollisionRule(AbstractTeam.CollisionRule.PUSH_OTHER_TEAMS);
 		getLogger("DisguiseLib").info("DisguiseLib loaded.");
 	}
+
+	public static void setPlayerClientVisibility(boolean clientVisibility) {
+		DISGUISE_TEAM.setShowFriendlyInvisibles(clientVisibility);
+	}
 }
