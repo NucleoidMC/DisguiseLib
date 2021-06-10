@@ -176,7 +176,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             // We must treat disguised player differently
             // Why, I hear you ask ..?
             // Well, sending spawn packet of the new entity makes the player not being able to move :(
-            TeamS2CPacket removeTeamPacket = TeamS2CPacket.updateRemovedTeam(DISGUISE_TEAM);
+            TeamS2CPacket removeTeamPacket = TeamS2CPacket.changePlayerTeam(DISGUISE_TEAM, this.player.getGameProfile().getName(), TeamS2CPacket.Operation.REMOVE);
             this.sendPacket(removeTeamPacket);
 
             if(disguise.getDisguiseType() != EntityType.PLAYER && disguise.isDisguised()) {
