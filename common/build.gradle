@@ -5,7 +5,7 @@ dependencies {
 }
 
 architectury {
-    common()
+    common(false)
 }
 
 java {

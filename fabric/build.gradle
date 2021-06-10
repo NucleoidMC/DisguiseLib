@@ -1,5 +1,5 @@
 plugins {
-    id "com.github.johnrengelman.shadow" version "5.0.0"
+    id "com.github.johnrengelman.shadow" version "5.2.0"
 }
 
 repositories {
@@ -22,12 +22,12 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${rootProject.loader_version}"
     modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_version}"
 
-    modRuntime "com.github.CaffeineMC:hydrogen-fabric:mc1.16.5-v0.2.0"
+    //modRuntime 'com.github.CaffeineMC:Lithium-fabric:1.17.x~stable-SNAPSHOT'
     modRuntime "com.github.astei:lazydfu:0.1.2"
     //modRuntime "com.github.SuperCoder7979:databreaker:0.2.6"
 
     // Testing with /disguise command
-    modRuntime 'com.github.samolego.MobDisguises:mobdisguises-fabric:36167a1b02'
+    //modRuntime 'com.github.samolego.MobDisguises:mobdisguises-fabric:36167a1b02'
 
     implementation(project(path: ":common")) {
         transitive = false

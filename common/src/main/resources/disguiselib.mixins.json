@@ -6,7 +6,7 @@
   "mixins": [
     "EntityMixin_Disguise",
     "ServerPlayNetworkHandlerMixin_Disguiser",
-    "accessor.EntitiesDestroyS2CPacketAccessor",
+    "accessor.EntitiyDestroyS2CPacketAccessor",
     "accessor.EntityAccessor",
     "accessor.EntityAttributesS2CPacketAccessor",
     "accessor.EntityPositionS2CPacketAccessor",

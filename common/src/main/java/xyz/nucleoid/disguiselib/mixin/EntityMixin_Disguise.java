@@ -5,14 +5,14 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.entity.*;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.network.ServerPlayerInteractionManager;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -22,6 +22,7 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.GameMode;
@@ -65,8 +66,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     private Entity disguiselib$disguiseEntity;
     @Unique
     private int disguiselib$ticks;
-    @Shadow
-    private int entityId;
     @Unique
     private boolean disguiselib$disguised, disguiselib$disguiseAlive;
     @Unique
@@ -84,9 +83,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
     @Shadow
     public abstract Text getName();
-
-    @Shadow
-    public abstract int getEntityId();
 
     @Shadow
     public abstract DataTracker getDataTracker();
@@ -110,11 +106,17 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
     @Shadow public abstract boolean isGlowing();
 
-    @Shadow public abstract int getFireTicks();
-
     @Shadow public abstract boolean isSilent();
 
     @Shadow public abstract EntityPose getPose();
+
+    @Shadow private int id;
+
+    @Shadow public abstract int getId();
+
+    @Shadow public abstract BlockPos getBlockPos();
+
+    @Shadow public abstract boolean isOnFire();
 
     /**
      * Tells you the disguised status.
@@ -155,7 +157,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
                 // Previous type was player, we have to send a player remove packet
                 PlayerListS2CPacket listPacket = new PlayerListS2CPacket(REMOVE_PLAYER);
                 PlayerListS2CPacketAccessor listPacketAccessor = (PlayerListS2CPacketAccessor) listPacket;
-                listPacketAccessor.setEntries(Arrays.asList(listPacket.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
+                listPacketAccessor.setEntries(Arrays.asList(new PlayerListS2CPacket.Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
                 manager.sendToAll(listPacket);
             }
             this.disguiselib$profile = null;
@@ -163,17 +165,21 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
         this.disguiselib$disguiseAlive = this.disguiselib$disguiseEntity instanceof LivingEntity;
 
+        // Fix some client predictions
+        if(this.disguiselib$disguiseEntity instanceof MobEntity)
+            ((MobEntity) this.disguiselib$disguiseEntity).setAiDisabled(true);
+
         RegistryKey<World> worldRegistryKey = this.world.getRegistryKey();
 
         // Minor datatracker thingies
         this.updateTrackedData();
 
         // Updating entity on the client
-        manager.sendToDimension(new EntitiesDestroyS2CPacket(this.entityId), worldRegistryKey);
+        manager.sendToDimension(new EntityDestroyS2CPacket(this.id), worldRegistryKey);
         manager.sendToDimension(new EntitySpawnS2CPacket(this.disguiselib$entity), worldRegistryKey); // will be replaced by network handler
 
-        manager.sendToDimension(new EntityTrackerUpdateS2CPacket(this.entityId, this.getDataTracker(), true), worldRegistryKey);
-        manager.sendToDimension(new EntityEquipmentUpdateS2CPacket(this.entityId, this.disguiselib$getEquipment()), worldRegistryKey); // Reload equipment
+        manager.sendToDimension(new EntityTrackerUpdateS2CPacket(this.id, this.getDataTracker(), true), worldRegistryKey);
+        manager.sendToDimension(new EntityEquipmentUpdateS2CPacket(this.id, this.disguiselib$getEquipment()), worldRegistryKey); // Reload equipment
         manager.sendToDimension(new EntitySetHeadYawS2CPacket(this.disguiselib$entity, (byte) ((int) (this.getHeadYaw() * 256.0F / 360.0F))), worldRegistryKey); // Head correction
     }
 
@@ -300,7 +306,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     private void disguiselib$hideSelfView() {
         // Removing previous disguise if this is player
         // (we have it saved under a separate id)
-        ((ServerPlayerEntity) this.disguiselib$entity).networkHandler.sendPacket(new EntitiesDestroyS2CPacket(this.disguiselib$disguiseEntity.getEntityId()));
+        ((ServerPlayerEntity) this.disguiselib$entity).networkHandler.sendPacket(new EntityDestroyS2CPacket(this.disguiselib$disguiseEntity.getId()));
     }
 
     /**
@@ -309,7 +315,19 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Unique
     private void disguiselib$constructFakePlayer() {
-        this.disguiselib$disguiseEntity = new ServerPlayerEntity(this.getServer(), (ServerWorld) this.world, this.disguiselib$profile, new ServerPlayerInteractionManager((ServerWorld) this.world));
+        BlockPos pos = this.getBlockPos();
+        //noinspection MixinInnerClass
+        this.disguiselib$disguiseEntity = new PlayerEntity(world, pos, this.getHeadYaw(), new GameProfile(this.uuid, null)) {
+            @Override
+            public boolean isSpectator() {
+                return false;
+            }
+
+            @Override
+            public boolean isCreative() {
+                return false;
+            }
+        };
         // Showing all skin parts
         this.disguiselib$disguiseEntity.getDataTracker().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
     }
@@ -332,22 +350,21 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Unique
     private void disguiselib$sendProfileUpdates() {
-        PlayerListS2CPacket packet = new PlayerListS2CPacket();
+        PlayerListS2CPacket packet = new PlayerListS2CPacket(REMOVE_PLAYER);
         //noinspection ConstantConditions
         PlayerListS2CPacketAccessor accessor = (PlayerListS2CPacketAccessor) packet;
-        accessor.setEntries(Arrays.asList(packet.new Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
+        accessor.setEntries(Arrays.asList(new PlayerListS2CPacket.Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
 
         PlayerManager playerManager = this.world.getServer().getPlayerManager();
-        accessor.setAction(REMOVE_PLAYER);
         playerManager.sendToAll(packet);
         accessor.setAction(ADD_PLAYER);
         playerManager.sendToAll(packet);
 
         ServerChunkManager manager = (ServerChunkManager) this.world.getChunkManager();
         ThreadedAnvilChunkStorage storage = manager.threadedAnvilChunkStorage;
-        EntityTrackerEntryAccessor trackerEntry = ((ThreadedAnvilChunkStorageAccessor) storage).getEntityTrackers().get(this.getEntityId());
+        EntityTrackerEntryAccessor trackerEntry = ((ThreadedAnvilChunkStorageAccessor) storage).getEntityTrackers().get(this.getId());
         if(trackerEntry != null)
-            trackerEntry.getTrackingPlayers().forEach(tracking -> trackerEntry.getEntry().startTracking(tracking));
+            trackerEntry.getListeners().forEach(tracking -> trackerEntry.getEntry().startTracking(tracking.getPlayer()));
 
         // Changing entity on client
         if(this.disguiselib$entity instanceof ServerPlayerEntity) {
@@ -364,7 +381,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
                     targetWorld.isFlat(),
                     true
             ));
-            player.networkHandler.requestTeleport(player.getX(), player.getY(), player.getZ(), player.yaw, player.pitch);
+            player.networkHandler.requestTeleport(player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch());
 
             player.server.getPlayerManager().sendCommandTree(player);
 
@@ -372,7 +389,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             player.networkHandler.sendPacket(new HealthUpdateS2CPacket(player.getHealth(), player.getHungerManager().getFoodLevel(), player.getHungerManager().getSaturationLevel()));
 
             for (StatusEffectInstance statusEffect : player.getStatusEffects()) {
-                player.networkHandler.sendPacket(new EntityStatusEffectS2CPacket(player.getEntityId(), statusEffect));
+                player.networkHandler.sendPacket(new EntityStatusEffectS2CPacket(player.getId(), statusEffect));
             }
 
             player.sendAbilitiesUpdate();
@@ -397,7 +414,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
         this.disguiselib$disguiseEntity.setSneaking(this.isSneaking());
         this.disguiselib$disguiseEntity.setSwimming(this.isSwimming());
         this.disguiselib$disguiseEntity.setGlowing(this.isGlowing());
-        this.disguiselib$disguiseEntity.setFireTicks(this.getFireTicks());
+        this.disguiselib$disguiseEntity.setOnFire(this.isOnFire());
         this.disguiselib$disguiseEntity.setSilent(this.isSilent());
         this.disguiselib$disguiseEntity.setPose(this.getPose());
     }
@@ -433,7 +450,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * it.
      */
     @Inject(
-            method = "remove()V",
+            method = "discard()V",
             at = @At("TAIL")
     )
     private void onRemove(CallbackInfo ci) {
@@ -443,7 +460,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             PlayerListS2CPacketAccessor listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
 
             GameProfile profile = new GameProfile(this.disguiselib$entity.getUuid(), this.getName().getString());
-            listS2CPacketAccessor.setEntries(Arrays.asList(packet.new Entry(profile, 0, GameMode.SURVIVAL, this.getName())));
+            listS2CPacketAccessor.setEntries(Arrays.asList(new PlayerListS2CPacket.Entry(profile, 0, GameMode.SURVIVAL, this.getName())));
 
             PlayerManager manager = this.world.getServer().getPlayerManager();
             manager.sendToAll(packet);
@@ -456,11 +473,11 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @param tag tag to load data from.
      */
     @Inject(
-            method = "fromTag(Lnet/minecraft/nbt/CompoundTag;)V",
+            method = "readNbt(Lnet/minecraft/nbt/NbtCompound;)V",
             at = @At("TAIL")
     )
-    private void fromTag(CompoundTag tag, CallbackInfo ci) {
-        CompoundTag disguiseTag = (CompoundTag) tag.get("DisguiseLib");
+    private void fromTag(NbtCompound tag, CallbackInfo ci) {
+        NbtCompound disguiseTag = (NbtCompound) tag.get("DisguiseLib");
 
         if(disguiseTag != null) {
             this.disguiselib$disguised = true;
@@ -472,7 +489,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
                 this.disguiselib$profile = new GameProfile(this.uuid, this.getName().getString());
                 this.disguiselib$constructFakePlayer();
             } else {
-                CompoundTag disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
+                NbtCompound disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
                 if(!disguiseEntityTag.isEmpty())
                     this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, (entityx) -> entityx);
             }
@@ -485,19 +502,19 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @param tag tag to save data to.
      */
     @Inject(
-            method = "toTag(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/nbt/CompoundTag;",
+            method = "writeNbt(Lnet/minecraft/nbt/NbtCompound;)Lnet/minecraft/nbt/NbtCompound;",
             at = @At("TAIL")
     )
-    private void toTag(CompoundTag tag, CallbackInfoReturnable<CompoundTag> cir) {
+    private void toTag(NbtCompound tag, CallbackInfoReturnable<NbtCompound> cir) {
         if(this.disguiselib$disguised) {
-            CompoundTag disguiseTag = new CompoundTag();
+            NbtCompound disguiseTag = new NbtCompound();
 
             disguiseTag.putString("DisguiseType", Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseType).toString());
             disguiseTag.putBoolean("DisguiseAlive", this.disguiselib$disguiseAlive);
 
             if(this.disguiselib$disguiseEntity != null && !this.disguiselib$entity.equals(this.disguiselib$disguiseEntity)) {
-                CompoundTag disguiseEntityTag = new CompoundTag();
-                this.disguiselib$disguiseEntity.toTag(disguiseEntityTag);
+                NbtCompound disguiseEntityTag = new NbtCompound();
+                this.disguiselib$disguiseEntity.writeNbt(disguiseEntityTag);
 
                 Identifier identifier = Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseEntity.getType());
                 disguiseEntityTag.putString("id", identifier.toString());

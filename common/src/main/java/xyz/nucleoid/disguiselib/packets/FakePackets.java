@@ -4,6 +4,8 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.FallingBlockEntity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
@@ -49,20 +51,21 @@ public class FakePackets {
      * @return fake {@link MobSpawnS2CPacket}
      */
     public static MobSpawnS2CPacket fakeMobSpawnS2CPacket(Entity entity) {
-        MobSpawnS2CPacket packet = new MobSpawnS2CPacket();
+        EntityDisguise disguise = (EntityDisguise) entity;
+        MobSpawnS2CPacket packet = new MobSpawnS2CPacket((LivingEntity) disguise.getDisguiseEntity());
 
         MobSpawnS2CPacketAccessor accessor = (MobSpawnS2CPacketAccessor) packet;
-        accessor.setEntityId(entity.getEntityId());
+        accessor.setEntityId(entity.getId());
         accessor.setUuid(entity.getUuid());
 
-        accessor.setEntityType(Registry.ENTITY_TYPE.getRawId(((EntityDisguise) entity).getDisguiseType()));
+        accessor.setEntityType(Registry.ENTITY_TYPE.getRawId(disguise.getDisguiseType()));
         accessor.setX(entity.getX());
         accessor.setY(entity.getY());
         accessor.setZ(entity.getZ());
 
-        accessor.setYaw((byte) ((int) (entity.yaw * 256.0F / 360.0F)));
+        accessor.setYaw((byte) ((int) (entity.getY() * 256.0F / 360.0F)));
         accessor.setHeadYaw((byte) ((int) (entity.getHeadYaw() * 256.0F / 360.0F)));
-        accessor.setPitch((byte) ((int) (entity.pitch * 256.0F / 360.0F)));
+        accessor.setPitch((byte) ((int) (entity.getPitch() * 256.0F / 360.0F)));
 
         double max = 3.9D;
         Vec3d vec3d = entity.getVelocity();
@@ -108,18 +111,18 @@ public class FakePackets {
      * @return fake {@link PlayerSpawnS2CPacket}
      */
     public static PlayerSpawnS2CPacket fakePlayerSpawnS2CPacket(Entity entity) {
-        PlayerSpawnS2CPacket packet = new PlayerSpawnS2CPacket();
+        PlayerSpawnS2CPacket packet = new PlayerSpawnS2CPacket((PlayerEntity) ((EntityDisguise) entity).getDisguiseEntity());
         PlayerSpawnS2CPacketAccessor accessor = (PlayerSpawnS2CPacketAccessor) packet;
 
-        accessor.setId(entity.getEntityId());
+        accessor.setId(entity.getId());
         accessor.setUuid(entity.getUuid());
 
         accessor.setX(entity.getX());
         accessor.setY(entity.getY());
         accessor.setZ(entity.getZ());
 
-        accessor.setYaw((byte) ((int) (entity.yaw * 256.0F / 360.0F)));
-        accessor.setPitch((byte) ((int) (entity.pitch * 256.0F / 360.0F)));
+        accessor.setYaw((byte) ((int) (entity.getYaw() * 256.0F / 360.0F)));
+        accessor.setPitch((byte) ((int) (entity.getPitch() * 256.0F / 360.0F)));
 
         return packet;
     }
