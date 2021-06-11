@@ -44,6 +44,10 @@ import net.minecraft.entity.EntityType;
 
 public class MyDisguises {
     public static void disguise() {
+        // Make sure you are executing disguise on the server side
+        if(world.isClient)
+            return;
+
         // Disguises as creeper
         ((EntityDisguise) entityToDisguise).disguiseAs(EntityType.CREEPER);
 
