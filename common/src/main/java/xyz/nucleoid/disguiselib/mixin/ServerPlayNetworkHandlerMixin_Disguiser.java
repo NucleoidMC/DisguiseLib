@@ -82,7 +82,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                 entity = world.getEntityById(((MobSpawnS2CPacketAccessor) packet).getEntityId());
             } else if(packet instanceof EntitySpawnS2CPacket) {
                 entity = world.getEntityById(((EntitySpawnS2CPacketAccessor) packet).getEntityId());
-            } else if(packet instanceof EntityDestroyS2CPacket && ((EntityDestroyS2CPacketAccessor) packet).getEntityIds() == this.player.getId()) {
+            } else if(packet instanceof EntitiesDestroyS2CPacket && ((EntitiesDestroyS2CPacketAccessor) packet).getEntityIds().getInt(0) == this.player.getId()) {
                 ci.cancel();
                 return;
             } else if(packet instanceof EntityTrackerUpdateS2CPacket) {

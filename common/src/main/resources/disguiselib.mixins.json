@@ -8,7 +8,7 @@
     "ServerPlayNetworkHandlerMixin_Disguiser",
     "accessor.EntityAccessor",
     "accessor.EntityAttributesS2CPacketAccessor",
-    "accessor.EntityDestroyS2CPacketAccessor",
+    "accessor.EntitiesDestroyS2CPacketAccessor",
     "accessor.EntityPositionS2CPacketAccessor",
     "accessor.EntitySetHeadYawS2CPacketAccessor",
     "accessor.EntitySpawnS2CPacketAccessor",

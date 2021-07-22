@@ -175,7 +175,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
         this.updateTrackedData();
 
         // Updating entity on the client
-        manager.sendToDimension(new EntityDestroyS2CPacket(this.id), worldRegistryKey);
+        manager.sendToDimension(new EntitiesDestroyS2CPacket(this.id), worldRegistryKey);
         manager.sendToDimension(new EntitySpawnS2CPacket(this.disguiselib$entity), worldRegistryKey); // will be replaced by network handler
 
         manager.sendToDimension(new EntityTrackerUpdateS2CPacket(this.id, this.getDataTracker(), true), worldRegistryKey);
@@ -306,7 +306,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     private void disguiselib$hideSelfView() {
         // Removing previous disguise if this is player
         // (we have it saved under a separate id)
-        ((ServerPlayerEntity) this.disguiselib$entity).networkHandler.sendPacket(new EntityDestroyS2CPacket(this.disguiselib$disguiseEntity.getId()));
+        ((ServerPlayerEntity) this.disguiselib$entity).networkHandler.sendPacket(new EntitiesDestroyS2CPacket(this.disguiselib$disguiseEntity.getId()));
     }
 
     /**
