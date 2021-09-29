@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket.BRAND;
 import static xyz.nucleoid.disguiselib.DisguiseLib.DISGUISE_TEAM;
 
 @Mixin(ServerPlayNetworkHandler.class)
@@ -137,8 +138,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
 
     /**
      * Sends fake packet instead of the real one.
-     * Arrays.asList is used as it returns mutable map, otherwise
-     * this packet can cause some issues with other mods.
+     *
      * @param entity the entity that is disguised and needs to have a custom packet sent.
      */
     @Unique
@@ -158,6 +158,9 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER);
             //noinspection ConstantConditions
             PlayerListS2CPacketAccessor listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
+
+            // Arrays.asList is used as it returns mutable map, otherwise
+            // this packet can cause some issues with other mods.
             listS2CPacketAccessor.setEntries(Arrays.asList(new Entry(profile, 0, GameMode.SURVIVAL, new LiteralText(profile.getName()))));
 
             this.sendPacket(packet);
@@ -183,8 +186,10 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                 if(disguiseEntity != null) {
                     if(spawnPacket instanceof MobSpawnS2CPacket) {
                         ((MobSpawnS2CPacketAccessor) spawnPacket).setEntityId(disguiseEntity.getId());
+                        ((MobSpawnS2CPacketAccessor) spawnPacket).setUuid(disguiseEntity.getUuid());
                     } else if(spawnPacket instanceof EntitySpawnS2CPacket) {
                         ((EntitySpawnS2CPacketAccessor) spawnPacket).setEntityId(disguiseEntity.getId());
+                        ((EntitySpawnS2CPacketAccessor) spawnPacket).setUuid(disguiseEntity.getUuid());
                     }
                     this.sendPacket(spawnPacket);
 
@@ -228,7 +233,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
 
 
     @Inject(method = "onPlayerMove(Lnet/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket;)V", at = @At("RETURN"))
-    private void removeTaterzenFromTablist(PlayerMoveC2SPacket packet, CallbackInfo ci) {
+    private void removeFromTablist(PlayerMoveC2SPacket packet, CallbackInfo ci) {
         if(!this.disguiselib$q.isEmpty() && --this.disguiselib$qTimer <= 0) {
             this.disguiselib$skipCheck = true;
             this.disguiselib$q.forEach(this::sendPacket);
@@ -241,7 +246,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
 
     @Inject(method = "onCustomPayload(Lnet/minecraft/network/packet/c2s/play/CustomPayloadC2SPacket;)V", at = @At("TAIL"))
     private void onClientBrand(CustomPayloadC2SPacket packet, CallbackInfo ci) {
-        if(!this.disguiselib$sentTeamPacket) {
+        if(!this.disguiselib$sentTeamPacket && packet.getChannel().equals(BRAND)) {
             // Disabling collisions with the disguised entity itself
             TeamS2CPacket addTeamPacket = TeamS2CPacket.updateTeam(DISGUISE_TEAM, true); // create team
             this.disguiselib$sentTeamPacket = true;

@@ -1,5 +1,5 @@
 plugins {
-    id "com.github.johnrengelman.shadow" version "5.0.0"
+    id "com.github.johnrengelman.shadow" version "7.0.0"
 }
 
 configurations {
@@ -12,19 +12,20 @@ architectury {
 }
 
 loom {
-    mixinConfigs = ["disguiselib.mixins.json"]
-    useFabricMixin = true
+    forge {
+        mixinConfigs "disguiselib.mixins.json"
+    }
 }
 
 dependencies {
     forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
 
-    modRuntime 'com.github.samolego.MobDisguises:mobdisguises-forge:36167a1b02'
+    //modRuntime 'com.github.samolego.MobDisguises:mobdisguises-forge:36167a1b02'
 
-    implementation(project(path: ":common")) {
+    implementation(project(path: ":common", configuration: "dev")) {
         transitive = false
     }
-    developmentForge(project(path: ":common")) {
+    developmentForge(project(path: ":common", configuration: "dev")) {
         transitive = false
     }
     shadowCommon(project(path: ":common", configuration: "transformProductionForge")) {
@@ -55,10 +56,6 @@ remapJar {
 
 jar {
     classifier "dev"
-}
-
-java {
-    withSourcesJar()
 }
 
 sourcesJar {

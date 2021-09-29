@@ -6,6 +6,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
+import java.util.UUID;
+
 @Mixin(EntitySpawnS2CPacket.class)
 public interface EntitySpawnS2CPacketAccessor {
     @Mutable
@@ -21,4 +23,8 @@ public interface EntitySpawnS2CPacketAccessor {
     @Mutable
     @Accessor("id")
     void setEntityId(int id);
+
+    @Mutable
+    @Accessor("uuid")
+    void setUuid(UUID uuid);
 }
