@@ -52,6 +52,7 @@ import java.util.stream.Collectors;
 import static net.minecraft.entity.EntityType.PLAYER;
 import static net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action.ADD_PLAYER;
 import static net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action.REMOVE_PLAYER;
+import static xyz.nucleoid.disguiselib.DisguiseLib.DISGUISE_TEAM;
 import static xyz.nucleoid.disguiselib.mixin.accessor.PlayerEntityAccessor.getPLAYER_MODEL_PARTS;
 
 @Mixin(Entity.class)
@@ -304,7 +305,11 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     private void disguiselib$hideSelfView() {
         // Removing previous disguise if this is player
         // (we have it saved under a separate id)
-        ((ServerPlayerEntity) this.disguiselib$entity).networkHandler.sendPacket(new EntitiesDestroyS2CPacket(this.disguiselib$disguiseEntity.getId()));
+        ServerPlayerEntity player = (ServerPlayerEntity) this.disguiselib$entity;
+        player.networkHandler.sendPacket(new EntitiesDestroyS2CPacket(this.disguiselib$disguiseEntity.getId()));
+
+        TeamS2CPacket removeTeamPacket = TeamS2CPacket.changePlayerTeam(DISGUISE_TEAM, player.getGameProfile().getName(), TeamS2CPacket.Operation.REMOVE);
+        player.networkHandler.sendPacket(removeTeamPacket);
     }
 
     /**
