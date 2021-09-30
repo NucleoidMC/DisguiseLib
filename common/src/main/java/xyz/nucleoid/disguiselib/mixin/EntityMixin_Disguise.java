@@ -10,7 +10,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.*;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerChunkManager;
@@ -320,20 +319,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Unique
     private void disguiselib$constructFakePlayer(@NotNull GameProfile profile) {
-        BlockPos pos = this.getBlockPos();
-        //noinspection MixinInnerClass
-        this.disguiselib$disguiseEntity = new PlayerEntity(world, pos, this.getHeadYaw(), profile) {
-            @Override
-            public boolean isSpectator() {
-                return false;
-            }
-
-            @Override
-            public boolean isCreative() {
-                return false;
-            }
-        };
-        // Showing all skin parts
+        this.disguiselib$disguiseEntity = new ServerPlayerEntity(world.getServer(), (ServerWorld) world, profile);
         this.disguiselib$disguiseEntity.getDataTracker().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
     }
 
