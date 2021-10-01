@@ -6,9 +6,10 @@
   "mixins": [
     "EntityMixin_Disguise",
     "ServerPlayNetworkHandlerMixin_Disguiser",
+    "ServerPlayNetworkHandlerMixin_HitCheck",
+    "accessor.EntitiesDestroyS2CPacketAccessor",
     "accessor.EntityAccessor",
     "accessor.EntityAttributesS2CPacketAccessor",
-    "accessor.EntitiesDestroyS2CPacketAccessor",
     "accessor.EntityPositionS2CPacketAccessor",
     "accessor.EntitySetHeadYawS2CPacketAccessor",
     "accessor.EntitySpawnS2CPacketAccessor",

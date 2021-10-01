@@ -128,6 +128,16 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                     ci.cancel();
                     return;
                 }
+            } else if(packet instanceof EntityVelocityUpdateS2CPacket velocityPacket) {
+                int id = velocityPacket.getId();
+                if(id != this.player.getId()) {
+
+                    Entity entity1 = world.getEntityById(id);
+                    if(entity1 != null && ((EntityDisguise) entity1).isDisguised()) {
+                        // Cancels some client predictions
+                        ci.cancel();
+                    }
+                }
             }
 
             if(entity != null) {
@@ -188,6 +198,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                         ((EntitySpawnS2CPacketAccessor) spawnPacket).setEntityId(disguiseEntity.getId());
                         ((EntitySpawnS2CPacketAccessor) spawnPacket).setUuid(disguiseEntity.getUuid());
                     }
+                    disguiseEntity.startRiding(this.player, true);
                     this.sendPacket(spawnPacket);
 
                     TeamS2CPacket joinTeamPacket = TeamS2CPacket.changePlayerTeam(DISGUISE_TEAM, this.player.getGameProfile().getName(), TeamS2CPacket.Operation.ADD); // join team
@@ -196,6 +207,10 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             }
             ci.cancel();
         } else if(disguise.isDisguised()) {
+            //this.player.getX()
+            //ArmorStandEntity fakeStand = new ArmorStandEntity(this.player.world, );
+            //fakeStand.startRiding(fakeStand, true);
+            //new EntitySpawnS2CPacket(fakeStand);
             this.sendPacket(spawnPacket);
             ci.cancel();
         }
