@@ -21,7 +21,6 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.GameMode;
@@ -110,8 +109,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     @Shadow private int id;
 
     @Shadow public abstract int getId();
-
-    @Shadow public abstract BlockPos getBlockPos();
 
     @Shadow public abstract boolean isOnFire();
 
