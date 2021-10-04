@@ -3,7 +3,8 @@ plugins {
 }
 
 configurations {
-    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
+    compileClasspath.extendsFrom shadowCommon
+    runtimeClasspath.extendsFrom shadowCommon
 }
 
 architectury {
@@ -21,10 +22,6 @@ dependencies {
     forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
 
     //modRuntime 'com.github.samolego.MobDisguises:mobdisguises-forge:36167a1b02'
-
-    implementation(project(path: ":common", configuration: "dev")) {
-        transitive = false
-    }
     developmentForge(project(path: ":common", configuration: "dev")) {
         transitive = false
     }
