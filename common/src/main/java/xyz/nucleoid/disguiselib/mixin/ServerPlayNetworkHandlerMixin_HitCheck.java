@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "net.minecraft.server.network.ServerPlayNetworkHandler$1")
 public class ServerPlayNetworkHandlerMixin_HitCheck {
 
-    @Inject(
+    /*@Inject(
             method = "attack",
             at = @At(
                     value = "INVOKE",
@@ -20,5 +20,5 @@ public class ServerPlayNetworkHandlerMixin_HitCheck {
         // Prevents disconnect
         // todo - apply only if disguised
         ci.cancel();
-    }
+    }*/
 }

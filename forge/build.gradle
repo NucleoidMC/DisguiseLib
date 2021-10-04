@@ -3,6 +3,7 @@ plugins {
 }
 
 configurations {
+    shadowCommon
     compileClasspath.extendsFrom shadowCommon
     runtimeClasspath.extendsFrom shadowCommon
 }
