@@ -1,6 +1,8 @@
 package xyz.nucleoid.disguiselib.mixin;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.entity.*;
 import net.minecraft.entity.data.DataTracker;
@@ -41,10 +43,7 @@ import xyz.nucleoid.disguiselib.mixin.accessor.EntityTrackerEntryAccessor;
 import xyz.nucleoid.disguiselib.mixin.accessor.PlayerListS2CPacketAccessor;
 import xyz.nucleoid.disguiselib.mixin.accessor.ThreadedAnvilChunkStorageAccessor;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static net.minecraft.entity.EntityType.PLAYER;
@@ -140,7 +139,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
         if(entityType == PLAYER) {
             if(this.disguiselib$profile == null)
-                this.disguiselib$profile = new GameProfile(this.uuid, this.getName().getString());
+                this.setGameProfile(new GameProfile(this.uuid, this.getName().getString()));
             this.disguiselib$constructFakePlayer(this.disguiselib$profile);
         } else {
             // Why null check? Well, if entity was disguised via EntityDisguise#disguiseAs(Entity), this field is already set
@@ -193,7 +192,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
         this.disguiselib$disguiseEntity = entity;
         if(entity instanceof PlayerEntity) {
-            this.disguiselib$profile = ((PlayerEntity) entity).getGameProfile();
+            this.setGameProfile(((PlayerEntity) entity).getGameProfile());
         }
         this.disguiseAs(entity.getType());
     }
@@ -291,6 +290,19 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     @Override
     public void setGameProfile(@Nullable GameProfile gameProfile) {
         this.disguiselib$profile = gameProfile;
+        if(gameProfile != null) {
+            String name = gameProfile.getName();
+            if(name.length() > 16) {
+                // Minecraft kicks players on such profile name received
+                name = name.substring(0, 16);
+                PropertyMap properties = gameProfile.getProperties();
+                this.disguiselib$profile = new GameProfile(gameProfile.getId(), name);
+                Collection<Property> textures = properties.get("textures");
+                if(!textures.isEmpty())
+                    this.disguiselib$profile.getProperties().put("textures", textures.stream().findFirst().get());
+            }
+        }
+
         this.disguiselib$sendProfileUpdates();
     }
 
@@ -472,7 +484,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             this.disguiselib$disguiseType = Registry.ENTITY_TYPE.get(disguiseTypeId);
 
             if(this.disguiselib$disguiseType == PLAYER) {
-                this.disguiselib$profile = new GameProfile(this.uuid, this.getName().getString());
+                this.setGameProfile(new GameProfile(this.uuid, this.getName().getString()));
                 this.disguiselib$constructFakePlayer(this.disguiselib$profile);
             } else {
                 NbtCompound disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
