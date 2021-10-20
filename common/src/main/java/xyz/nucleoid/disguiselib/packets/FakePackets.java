@@ -33,11 +33,11 @@ public class FakePackets {
         Packet<?> packet = disguise.createSpawnPacket();
 
         if(packet instanceof MobSpawnS2CPacket) {
-            packet = fakeMobSpawnS2CPacket(entity);
+            packet = fakeMobSpawnS2CPacket(disguise);
         } else if(packet instanceof EntitySpawnS2CPacket) {
-            packet = fakeEntitySpawnS2CPacket(entity);
+            packet = fakeEntitySpawnS2CPacket(disguise);
         } else if(packet instanceof PlayerSpawnS2CPacket) {
-            packet = fakePlayerSpawnS2CPacket(entity);
+            packet = fakePlayerSpawnS2CPacket(disguise);
         }
 
         return packet;
