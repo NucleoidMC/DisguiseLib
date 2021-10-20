@@ -133,6 +133,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
         PlayerManager manager = this.world.getServer().getPlayerManager();
 
+        System.out.println("Checking disguise entity :: " + this.disguiselib$disguiseEntity);
         if(this.disguiselib$disguiseEntity != null && this.disguiselib$disguiseEntity.getType() != entityType && this.disguiselib$entity instanceof ServerPlayerEntity) {
             this.disguiselib$hideSelfView();
         }
@@ -142,6 +143,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
                 this.setGameProfile(new GameProfile(this.uuid, this.getName().getString()));
             this.disguiselib$constructFakePlayer(this.disguiselib$profile);
         } else {
+            System.out.println("Not player disguise");
             // Why null check? Well, if entity was disguised via EntityDisguise#disguiseAs(Entity), this field is already set
             if(this.disguiselib$disguiseEntity == null || this.disguiselib$disguiseEntity.getType() != entityType)
                 this.disguiselib$disguiseEntity = entityType.create(world);
@@ -430,7 +432,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
         if(this.isDisguised()) {
             if(this.world.getServer() != null && !(this.disguiselib$disguiseEntity instanceof LivingEntity) && !(this.disguiselib$entity instanceof PlayerEntity))
                 this.world.getServer().getPlayerManager().sendToDimension(new EntityPositionS2CPacket(this.disguiselib$entity), this.world.getRegistryKey());
-            else if(this.disguiselib$entity instanceof ServerPlayerEntity && ++this.disguiselib$ticks % 40 == 0) {
+            else if(this.disguiselib$entity instanceof ServerPlayerEntity && ++this.disguiselib$ticks % 40 == 0 && this.disguiselib$disguiseEntity != null) {
                 // "Disguised as" message
                 MutableText msg = new LiteralText("You are disguised as ")
                         .append(new TranslatableText(this.disguiselib$disguiseEntity.getType().getTranslationKey()))
