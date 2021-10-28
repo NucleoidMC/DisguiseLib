@@ -27,6 +27,7 @@ public class FakePackets {
      * @return fake entity spawn packet (Either player)
      */
     public static Packet<?> universalSpawnPacket(Entity entity) {
+        // fixme - disguising non-living kicks you (just upon disguise)
         Entity disguise = ((EntityDisguise) entity).getDisguiseEntity();
         if(disguise == null) {
             disguise = entity;

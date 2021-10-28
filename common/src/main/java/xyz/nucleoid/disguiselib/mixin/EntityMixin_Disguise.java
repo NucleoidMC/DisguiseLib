@@ -109,6 +109,8 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
     @Shadow public abstract boolean isOnFire();
 
+    @Shadow public abstract Text getDisplayName();
+
     /**
      * Tells you the disguised status.
      *
@@ -136,7 +138,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
         if(entityType == PLAYER) {
             if(this.disguiselib$profile == null)
-                this.setGameProfile(new GameProfile(this.uuid, this.getName().getString()));
+                this.setGameProfile(new GameProfile(this.uuid, this.getDisplayName().getString()));
             this.disguiselib$constructFakePlayer(this.disguiselib$profile);
         } else {
             // Why null check? Well, if entity was disguised via EntityDisguise#disguiseAs(Entity), this field is already set
@@ -205,7 +207,9 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             this.disguiselib$hideSelfView();
         }
         // Disguising entity as itself
-        this.disguiselib$disguiseEntity = null;
+        this.disguiselib$disguiseEntity = this.disguiselib$entity;
+        this.disguiselib$disguiseType  =this.getType();
+
         this.disguiseAs(this.getType());
 
         // Setting as not-disguised
