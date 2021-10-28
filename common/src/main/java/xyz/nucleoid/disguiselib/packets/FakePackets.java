@@ -28,16 +28,18 @@ public class FakePackets {
      */
     public static Packet<?> universalSpawnPacket(Entity entity) {
         Entity disguise = ((EntityDisguise) entity).getDisguiseEntity();
-        if(disguise == null)
+        if(disguise == null) {
             disguise = entity;
+        }
+
         Packet<?> packet = disguise.createSpawnPacket();
 
         if(packet instanceof MobSpawnS2CPacket) {
-            packet = fakeMobSpawnS2CPacket(disguise);
+            packet = fakeMobSpawnS2CPacket(entity);
         } else if(packet instanceof EntitySpawnS2CPacket) {
-            packet = fakeEntitySpawnS2CPacket(disguise);
+            packet = fakeEntitySpawnS2CPacket(entity);
         } else if(packet instanceof PlayerSpawnS2CPacket) {
-            packet = fakePlayerSpawnS2CPacket(disguise);
+            packet = fakePlayerSpawnS2CPacket(entity);
         }
 
         return packet;

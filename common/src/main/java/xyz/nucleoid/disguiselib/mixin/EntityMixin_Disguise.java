@@ -66,8 +66,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     @Unique
     private int disguiselib$ticks;
     @Unique
-    private boolean disguiselib$disguised;
-    @Unique
     private EntityType<?> disguiselib$disguiseType;
     @Unique
     private GameProfile disguiselib$profile;
@@ -118,7 +116,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Override
     public boolean isDisguised() {
-        return this.disguiselib$disguised;
+        return this.disguiselib$disguiseEntity != null;
     }
 
     /**
@@ -128,7 +126,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Override
     public void disguiseAs(EntityType<?> entityType) {
-        this.disguiselib$disguised = true;
         this.disguiselib$disguiseType = entityType;
 
         PlayerManager manager = this.world.getServer().getPlayerManager();
@@ -212,7 +209,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
         this.disguiseAs(this.getType());
 
         // Setting as not-disguised
-        this.disguiselib$disguised = false;
         this.disguiselib$disguiseEntity = null;
     }
 
@@ -476,22 +472,26 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             at = @At("TAIL")
     )
     private void fromTag(NbtCompound tag, CallbackInfo ci) {
-        NbtCompound disguiseTag = (NbtCompound) tag.get("DisguiseLib");
+        try {
+            NbtCompound disguiseTag = (NbtCompound) tag.get("DisguiseLib");
 
-        if(disguiseTag != null) {
-            this.disguiselib$disguised = true;
-            Identifier disguiseTypeId = new Identifier(disguiseTag.getString("DisguiseType"));
-            this.disguiselib$disguiseType = Registry.ENTITY_TYPE.get(disguiseTypeId);
+            if(disguiseTag != null) {
+                Identifier disguiseTypeId = new Identifier(disguiseTag.getString("DisguiseType"));
+                this.disguiselib$disguiseType = Registry.ENTITY_TYPE.get(disguiseTypeId);
 
-            if(this.disguiselib$disguiseType == PLAYER) {
-                this.setGameProfile(new GameProfile(this.uuid, this.getName().getString()));
-                this.disguiselib$constructFakePlayer(this.disguiselib$profile);
-            } else {
-                NbtCompound disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
-                if(!disguiseEntityTag.isEmpty())
-                    this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, (entityx) -> entityx);
+                if(this.disguiselib$disguiseType == PLAYER) {
+                    this.setGameProfile(new GameProfile(this.uuid, this.getName().getString()));
+                    this.disguiselib$constructFakePlayer(this.disguiselib$profile);
+                } else {
+                    NbtCompound disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
+                    if(!disguiseEntityTag.isEmpty())
+                        this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, (entityx) -> entityx);
+                }
             }
+        } catch (Error e) {
+            e.printStackTrace();
         }
+
     }
 
     /**
@@ -504,22 +504,27 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             at = @At("TAIL")
     )
     private void toTag(NbtCompound tag, CallbackInfoReturnable<NbtCompound> cir) {
-        if(this.disguiselib$disguised) {
-            NbtCompound disguiseTag = new NbtCompound();
+        try {
+            if(this.isDisguised()) {
+                NbtCompound disguiseTag = new NbtCompound();
 
-            disguiseTag.putString("DisguiseType", Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseType).toString());
+                disguiseTag.putString("DisguiseType", Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseType).toString());
 
-            if(this.disguiselib$disguiseEntity != null && !this.disguiselib$entity.equals(this.disguiselib$disguiseEntity)) {
-                NbtCompound disguiseEntityTag = new NbtCompound();
-                this.disguiselib$disguiseEntity.writeNbt(disguiseEntityTag);
+                if(this.disguiselib$disguiseEntity != null && !this.disguiselib$entity.equals(this.disguiselib$disguiseEntity)) {
+                    NbtCompound disguiseEntityTag = new NbtCompound();
+                    this.disguiselib$disguiseEntity.writeNbt(disguiseEntityTag);
 
-                Identifier identifier = Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseEntity.getType());
-                disguiseEntityTag.putString("id", identifier.toString());
+                    Identifier identifier = Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseEntity.getType());
+                    disguiseEntityTag.putString("id", identifier.toString());
 
-                disguiseTag.put("DisguiseEntity", disguiseEntityTag);
+                    disguiseTag.put("DisguiseEntity", disguiseEntityTag);
+                }
+
+                tag.put("DisguiseLib", disguiseTag);
             }
-
-            tag.put("DisguiseLib", disguiseTag);
+        } catch (Error e) {
+            e.printStackTrace();
         }
+
     }
 }

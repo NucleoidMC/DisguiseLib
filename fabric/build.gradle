@@ -7,6 +7,9 @@ repositories {
         url 'https://oss.sonatype.org/content/repositories/snapshots'
     }
     maven {
+        url 'https://maven.bymartrixx.me'
+    }
+    maven {
         name = "TomTheGeek-repo"
         url = "https://maven.tomthegeek.ml/releases/"
     }
@@ -36,12 +39,6 @@ dependencies {
 
     // Testing with /disguise command
     //modRuntime 'com.github.samolego:MobDisguises:d6cc302588'
-
-    //modRuntime "com.github.samolego.Taterzens:taterzens-fabric:1.4.0"
-    //modRuntime files('libs/mobdisguises-1.0.3-fabric.jar')
-
-    // Taterzens
-    //modRuntime 'com.github.samolego.Taterzens:taterzens-fabric:1.3.0'
 
     common(project(path: ":common", configuration: "dev")) {
         transitive = false
