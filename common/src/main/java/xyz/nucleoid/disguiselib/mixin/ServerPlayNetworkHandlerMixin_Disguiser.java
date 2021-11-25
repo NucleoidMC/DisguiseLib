@@ -247,6 +247,8 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
     @Inject(method = "onPlayerMove(Lnet/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket;)V", at = @At("RETURN"))
     private void removeFromTablist(PlayerMoveC2SPacket packet, CallbackInfo ci) {
         if(!this.disguiselib$q.isEmpty() && --this.disguiselib$qTimer <= 0) {
+            // fixme - non-living disguised as player still not showing up
+            // fixme - player sometimes gets removed from tablist :(
             this.disguiselib$skipCheck = true;
             this.disguiselib$q.forEach(this::sendPacket);
             this.disguiselib$q.clear();

@@ -368,7 +368,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
         // Changing entity on client
         if(this.disguiselib$entity instanceof ServerPlayerEntity player) {
-            ServerWorld targetWorld = player.getServerWorld();
+            ServerWorld targetWorld = player.getWorld();
 
             player.networkHandler.sendPacket(new PlayerRespawnS2CPacket(
                     targetWorld.getDimension(),
