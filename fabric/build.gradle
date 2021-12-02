@@ -34,12 +34,6 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${rootProject.loader_version}"
     modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_version}"
 
-    //modRuntime 'com.github.CaffeineMC:Lithium-fabric:1.17.x~stable-SNAPSHOT'
-    //modRuntime "com.github.astei:lazydfu:0.1.2"
-
-    // Testing with /disguise command
-    //modRuntime 'com.github.samolego:MobDisguises:d6cc302588'
-
     common(project(path: ":common", configuration: "dev")) {
         transitive = false
     }

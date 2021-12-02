@@ -117,8 +117,8 @@ public class FakePackets {
         Entity disguise = ((EntityDisguise) entity).getDisguiseEntity();
         PlayerSpawnS2CPacket packet;
 
-        if (disguise instanceof PlayerEntity)  // Needed in case of taterzens - when they're disguised "back" to players, the check will be false
-            packet = new PlayerSpawnS2CPacket((PlayerEntity) disguise);
+        if (disguise instanceof PlayerEntity playerDisguise)  // Needed in case of taterzens - when they're disguised "back" to players, the check will be false
+            packet = new PlayerSpawnS2CPacket(playerDisguise);
         else
             packet = new PlayerSpawnS2CPacket(entity.getServer().getPlayerManager().getPlayerList().get(0));
 
