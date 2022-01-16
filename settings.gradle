@@ -8,5 +8,6 @@ pluginManagement {
 }
 
 include("common")
+include("api")
 include("fabric")
 include("forge")

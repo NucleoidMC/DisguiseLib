@@ -1,8 +1,8 @@
 dependencies {
-    // We depend on fabric loader here to use the fabric @Environment annotations and get the mixin dependencies
-    // Do NOT use other classes from fabric loader
-    modImplementation "net.fabricmc:fabric-loader:${rootProject.loader_version}"
+    modCompileOnly("net.fabricmc:fabric-loader:${rootProject.loader_version}")
 }
+
+def ENV = System.getenv();
 
 architectury {
     common()
@@ -10,10 +10,6 @@ architectury {
 
 configurations {
     dev
-}
-
-dependencies {
-    compileOnly(project(":api"))
 }
 
 artifacts {
@@ -28,7 +24,9 @@ publishing {
         }
     }
 
+    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
     repositories {
-
+        // Add repositories to publish to here.
     }
+
 }

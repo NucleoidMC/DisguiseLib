@@ -1,4 +1,4 @@
-package xyz.nucleoid.disguiselib.mixin.accessor;
+package xyz.nucleoid.disguiselib.impl.mixin.accessor;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket;

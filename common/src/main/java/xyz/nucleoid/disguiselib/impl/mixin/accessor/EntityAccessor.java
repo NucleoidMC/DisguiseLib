@@ -1,4 +1,4 @@
-package xyz.nucleoid.disguiselib.mixin.accessor;
+package xyz.nucleoid.disguiselib.impl.mixin.accessor;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.TrackedData;

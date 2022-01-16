@@ -1,4 +1,4 @@
-package xyz.nucleoid.disguiselib;
+package xyz.nucleoid.disguiselib.impl;
 
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Scoreboard;

@@ -34,10 +34,11 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${rootProject.loader_version}"
     modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_version}"
 
-    common(project(path: ":common", configuration: "dev")) {
+
+    shadowCommon(project(":api")) {
         transitive = false
     }
-    shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) {
+    shadowCommon(project(path: ":common")) {
         transitive = false
     }
 }

@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "xyz.nucleoid.disguiselib.mixin",
+  "package": "xyz.nucleoid.disguiselib.impl.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
     "EntityMixin_Disguise",

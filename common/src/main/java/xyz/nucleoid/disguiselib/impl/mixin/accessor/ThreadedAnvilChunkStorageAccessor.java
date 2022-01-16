@@ -1,4 +1,4 @@
-package xyz.nucleoid.disguiselib.mixin.accessor;
+package xyz.nucleoid.disguiselib.impl.mixin.accessor;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;

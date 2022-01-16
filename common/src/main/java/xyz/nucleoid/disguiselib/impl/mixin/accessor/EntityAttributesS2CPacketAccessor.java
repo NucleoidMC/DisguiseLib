@@ -1,4 +1,4 @@
-package xyz.nucleoid.disguiselib.mixin.accessor;
+package xyz.nucleoid.disguiselib.impl.mixin.accessor;
 
 import net.minecraft.network.packet.s2c.play.EntityAttributesS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;

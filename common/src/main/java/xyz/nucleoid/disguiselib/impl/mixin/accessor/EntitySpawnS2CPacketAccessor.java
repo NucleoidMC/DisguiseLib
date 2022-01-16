@@ -1,4 +1,4 @@
-package xyz.nucleoid.disguiselib.mixin.accessor;
+package xyz.nucleoid.disguiselib.impl.mixin.accessor;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;

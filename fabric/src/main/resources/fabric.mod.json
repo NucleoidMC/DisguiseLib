@@ -19,7 +19,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "xyz.nucleoid.disguiselib.DisguiseLib::init"
+      "xyz.nucleoid.disguiselib.impl.DisguiseLib::init"
     ]
   },
   "mixins": [

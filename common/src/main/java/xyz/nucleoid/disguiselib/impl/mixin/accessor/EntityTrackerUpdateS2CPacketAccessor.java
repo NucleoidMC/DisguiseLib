@@ -1,4 +1,4 @@
-package xyz.nucleoid.disguiselib.mixin.accessor;
+package xyz.nucleoid.disguiselib.impl.mixin.accessor;
 
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;

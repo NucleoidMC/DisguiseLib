@@ -1,4 +1,4 @@
-package xyz.nucleoid.disguiselib.mixin;
+package xyz.nucleoid.disguiselib.impl.mixin;
 
 import com.mojang.authlib.GameProfile;
 import io.netty.util.concurrent.Future;
@@ -10,8 +10,18 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.*;
+import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityAttributesS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityPositionS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntitySetHeadYawS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Entry;
+import net.minecraft.network.packet.s2c.play.PlayerSpawnS2CPacket;
+import net.minecraft.network.packet.s2c.play.TeamS2CPacket;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
@@ -23,10 +33,19 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import xyz.nucleoid.disguiselib.casts.DisguiseUtils;
-import xyz.nucleoid.disguiselib.casts.EntityDisguise;
-import xyz.nucleoid.disguiselib.mixin.accessor.*;
-import xyz.nucleoid.disguiselib.packets.FakePackets;
+import xyz.nucleoid.disguiselib.api.DisguiseUtils;
+import xyz.nucleoid.disguiselib.api.EntityDisguise;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntitiesDestroyS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityAttributesS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityPositionS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntitySetHeadYawS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntitySpawnS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityTrackerUpdateS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.MobSpawnS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerListS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerSpawnS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.packets.FakePackets;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -34,7 +53,7 @@ import java.util.List;
 import java.util.Set;
 
 import static net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket.BRAND;
-import static xyz.nucleoid.disguiselib.DisguiseLib.DISGUISE_TEAM;
+import static xyz.nucleoid.disguiselib.impl.DisguiseLib.DISGUISE_TEAM;
 
 @Mixin(ServerPlayNetworkHandler.class)
 public abstract class ServerPlayNetworkHandlerMixin_Disguiser {

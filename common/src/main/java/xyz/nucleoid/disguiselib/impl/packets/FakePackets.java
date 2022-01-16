@@ -1,4 +1,4 @@
-package xyz.nucleoid.disguiselib.packets;
+package xyz.nucleoid.disguiselib.impl.packets;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
@@ -13,10 +13,10 @@ import net.minecraft.network.packet.s2c.play.PlayerSpawnS2CPacket;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
-import xyz.nucleoid.disguiselib.casts.EntityDisguise;
-import xyz.nucleoid.disguiselib.mixin.accessor.EntitySpawnS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.mixin.accessor.MobSpawnS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.mixin.accessor.PlayerSpawnS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.api.EntityDisguise;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntitySpawnS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.MobSpawnS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerSpawnS2CPacketAccessor;
 
 public class FakePackets {
     /**

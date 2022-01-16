@@ -1,4 +1,4 @@
-package xyz.nucleoid.disguiselib.casts;
+package xyz.nucleoid.disguiselib.api;
 
 import net.minecraft.entity.LivingEntity;
 

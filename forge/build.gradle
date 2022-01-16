@@ -24,11 +24,14 @@ loom {
 dependencies {
     forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
 
-    //modRuntime 'com.github.samolego.MobDisguises:mobdisguises-forge:36167a1b02'
-    common(project(path: ":common", configuration: "dev")) {
+    shadowCommon(project(":api")) {
         transitive = false
     }
-    shadowCommon(project(path: ":common", configuration: "transformProductionForge")) {
+
+    common(project(":common")) {
+        transitive = false
+    }
+    shadowCommon(project(":common")) {
         transitive = false
     }
 }

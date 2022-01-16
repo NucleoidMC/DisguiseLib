@@ -19,17 +19,22 @@ repositories {
 dependencies {
     // fabric
     modImplementation "xyz.nucleoid:DisguiseLib:${project.disguiselib_version}"
+    modImplementation "xyz.nucleoid:DisguiseLib:${project.disguiselib_version}"
   
     // jitpack - architectury
-        // Architectury (common module)
-    modImplementation "xyz.nucleoid:DisguiseLib:disguiselib:${project.disguiselib_version}"
+    // Architectury (common module)
+    modImplementation "xyz.nucleoid:disguiselib-api:${project.disguiselib_version}"
     
+    // API
     // Fabric
-    modImplementation "xyz.nucleoid:DisguiseLib:disguiselib-fabric:${project.disguiselib_version}"
+    modImplementation "xyz.nucleoid:disguiselib-api:${project.disguiselib_version}"
+
+    // Implementations
+    modImplementation "xyz.nucleoid:disguiselib-fabric:${project.disguiselib_version}"
     
     // Forge
-    implementation fg.deobf "xyz.nucleoid:DisguiseLib:disguiselib:${project.disguiselib_version}"
-  
+    implementation fg.deobf "com.github.NucleoidMC.DisguiseLib:disguiselib-forge:${project.disguiselib_version}"
+    
 }
 ```
 # API
@@ -37,7 +42,7 @@ dependencies {
 Use the provided interface `EntityDisguise` on any class extending `net.minecraft.entity.Entity`.
 
 ```java
-import xyz.nucleoid.disguiselib.casts.EntityDisguise;
+import xyz.nucleoid.disguiselib.api.EntityDisguise;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -45,7 +50,7 @@ import net.minecraft.entity.EntityType;
 public class MyDisguises {
     public static void disguise() {
         // Make sure you are executing disguise on the server side
-        if(world.isClient)
+        if (world.isClient)
             return;
 
         // Disguises as creeper
@@ -60,11 +65,11 @@ public class MyDisguises {
         ((EntityDisguise) entityToDisguise).isDisguised(); // Tells whether entity is disguised or not
         ((EntityDisguise) entityToDisguise).removeDisguise(); // Clears the disguise
 
-        
+
         // Not that useful (mainly for internal use)
         ((EntityDisguise) entityToDisguise).getDisguiseType(); // Gets the EntityType of the disguise
         ((EntityDisguise) entityToDisguise).disguiseAlive(); // Whether the entity from the disguise is an instance of LivingEntity
-    }    
+    }
 }
 
 ```
