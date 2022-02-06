@@ -1,5 +1,6 @@
 dependencies {
     modCompileOnly("net.fabricmc:fabric-loader:${rootProject.loader_version}")
+    compileOnly('org.jetbrains:annotations:22.0.0')
 }
 
 def ENV = System.getenv();
@@ -29,4 +30,8 @@ publishing {
         // Add repositories to publish to here.
     }
 
+}
+
+repositories {
+    mavenCentral()
 }

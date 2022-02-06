@@ -21,7 +21,6 @@
     "accessor.PlayerSpawnS2CPacketAccessor",
     "accessor.ThreadedAnvilChunkStorageAccessor"
   ],
-  "client": [],
   "injectors": {
     "defaultRequire": 1
   }

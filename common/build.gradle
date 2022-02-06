@@ -8,18 +8,6 @@ architectury {
     common()
 }
 
-configurations {
-    dev
-}
-
-dependencies {
-    compileOnly(project(":api"))
-}
-
-artifacts {
-    dev(jar)
-}
-
 publishing {
     publications {
         mavenCommon(MavenPublication) {

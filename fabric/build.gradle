@@ -35,10 +35,8 @@ dependencies {
     modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_version}"
 
 
-    shadowCommon(project(":api")) {
-        transitive = false
-    }
-    shadowCommon(project(path: ":common")) {
+    common(project(path: ":common", configuration: "namedElements")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: 'transformProductionFabric')) {
         transitive = false
     }
 }

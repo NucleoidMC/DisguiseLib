@@ -20,6 +20,22 @@ subprojects {
 		minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
 		mappings("net.fabricmc:yarn:${rootProject.yarn_mappings}:v2")
 	}
+
+	if (it.name != "api") {
+
+		dependencies {
+			compileOnly project(":api")
+			compileOnly('org.jetbrains:annotations:22.0.0')
+		}
+
+		processResources {
+			from project(":api").sourceSets.main.resources
+		}
+
+		tasks.withType(JavaCompile) {
+			source(project(":api").sourceSets.main.allSource)
+		}
+	}
 }
 
 allprojects {
@@ -44,8 +60,7 @@ allprojects {
 		// If Javadoc is generated, this must be specified in that task too.
 		it.options.encoding = "UTF-8"
 
-		// Minecraft 1.17 (21w19a) upwards uses Java 16.
-		it.options.release = 16
+		it.options.release = 17
 	}
 
 

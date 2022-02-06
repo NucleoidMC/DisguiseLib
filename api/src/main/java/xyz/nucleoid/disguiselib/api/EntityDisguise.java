@@ -3,8 +3,10 @@ package xyz.nucleoid.disguiselib.api;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import org.jetbrains.annotations.Nullable;
 
+/**
+ * Util for disguising entities.
+ */
 public interface EntityDisguise {
 
     /**
@@ -45,7 +47,6 @@ public interface EntityDisguise {
      *
      * @return disguise entity or null if there's no disguise
      */
-    @Nullable
     Entity getDisguiseEntity();
 
     /**
@@ -70,14 +71,14 @@ public interface EntityDisguise {
      * Gets the {@link GameProfile} for disguised entity,
      * used when disguising as player.
      *
-     * @return GameProfile of the entity.
+     * @return GameProfile of the entity if set, otherwise null.
      */
-    @Nullable GameProfile getGameProfile();
+    GameProfile getGameProfile();
 
     /**
-     * Sets the GameProfile
+     * Sets the GameProfile.
      *
      * @param gameProfile a new profile for the entity.
      */
-    void setGameProfile(@Nullable GameProfile gameProfile);
+    void setGameProfile(GameProfile gameProfile);
 }
