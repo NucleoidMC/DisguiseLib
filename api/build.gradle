@@ -1,12 +1,11 @@
 dependencies {
     modCompileOnly("net.fabricmc:fabric-loader:${rootProject.loader_version}")
-    compileOnly('org.jetbrains:annotations:22.0.0')
 }
 
 def ENV = System.getenv();
 
 architectury {
-    common()
+    common(false)
 }
 
 configurations {

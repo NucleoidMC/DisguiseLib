@@ -227,7 +227,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
         }
         // Disguising entity as itself
         this.disguiselib$disguiseEntity = this.disguiselib$entity;
-        this.disguiselib$disguiseType  =this.getType();
+        this.disguiselib$disguiseType = this.getType();
 
         this.disguiseAs(this.getType());
 
@@ -259,7 +259,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     /**
      * Whether disguise type entity is an instance of {@link LivingEntity}.
      *
-     * @return true whether the disguise type is an instance of {@link LivingEntity}, otherwise false.
+     * @return true if the disguise type is an instance of {@link LivingEntity}, otherwise false.
      */
     @Override
     public boolean disguiseAlive() {
@@ -390,7 +390,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             ServerWorld targetWorld = player.getWorld();
 
             player.networkHandler.sendPacket(new PlayerRespawnS2CPacket(
-                    targetWorld.getDimension(),
+                    targetWorld.method_40134(),  // getDimension()
                     targetWorld.getRegistryKey(),
                     BiomeAccess.hashSeed(targetWorld.getSeed()),
                     player.interactionManager.getGameMode(),
@@ -478,6 +478,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             PlayerListS2CPacketAccessor listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
 
             GameProfile profile = new GameProfile(this.disguiselib$entity.getUuid(), this.getName().getString());
+            // Arrays.asList is needed as we PlayerList needs mutable list
             listS2CPacketAccessor.setEntries(Arrays.asList(new PlayerListS2CPacket.Entry(profile, 0, GameMode.SURVIVAL, this.getName())));
 
             PlayerManager manager = this.world.getServer().getPlayerManager();
@@ -495,26 +496,21 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             at = @At("TAIL")
     )
     private void fromTag(NbtCompound tag, CallbackInfo ci) {
-        try {
-            NbtCompound disguiseTag = (NbtCompound) tag.get("DisguiseLib");
+        NbtCompound disguiseTag = (NbtCompound) tag.get("DisguiseLib");
 
-            if(disguiseTag != null) {
-                Identifier disguiseTypeId = new Identifier(disguiseTag.getString("DisguiseType"));
-                this.disguiselib$disguiseType = Registry.ENTITY_TYPE.get(disguiseTypeId);
+        if(disguiseTag != null) {
+            Identifier disguiseTypeId = new Identifier(disguiseTag.getString("DisguiseType"));
+            this.disguiselib$disguiseType = Registry.ENTITY_TYPE.get(disguiseTypeId);
 
-                if(this.disguiselib$disguiseType == PLAYER) {
-                    this.setGameProfile(new GameProfile(this.uuid, this.getName().getString()));
-                    this.disguiselib$constructFakePlayer(this.disguiselib$profile);
-                } else {
-                    NbtCompound disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
-                    if(!disguiseEntityTag.isEmpty())
-                        this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, (entityx) -> entityx);
-                }
+            if(this.disguiselib$disguiseType == PLAYER) {
+                this.setGameProfile(new GameProfile(this.uuid, this.getName().getString()));
+                this.disguiselib$constructFakePlayer(this.disguiselib$profile);
+            } else {
+                NbtCompound disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
+                if(!disguiseEntityTag.isEmpty())
+                    this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, (entityx) -> entityx);
             }
-        } catch (Error e) {
-            e.printStackTrace();
         }
-
     }
 
     /**
@@ -527,27 +523,22 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             at = @At("TAIL")
     )
     private void toTag(NbtCompound tag, CallbackInfoReturnable<NbtCompound> cir) {
-        try {
-            if(this.isDisguised()) {
-                NbtCompound disguiseTag = new NbtCompound();
+        if(this.isDisguised()) {
+            NbtCompound disguiseTag = new NbtCompound();
 
-                disguiseTag.putString("DisguiseType", Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseType).toString());
+            disguiseTag.putString("DisguiseType", Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseType).toString());
 
-                if(this.disguiselib$disguiseEntity != null && !this.disguiselib$entity.equals(this.disguiselib$disguiseEntity)) {
-                    NbtCompound disguiseEntityTag = new NbtCompound();
-                    this.disguiselib$disguiseEntity.writeNbt(disguiseEntityTag);
+            if(this.disguiselib$disguiseEntity != null && !this.disguiselib$entity.equals(this.disguiselib$disguiseEntity)) {
+                NbtCompound disguiseEntityTag = new NbtCompound();
+                this.disguiselib$disguiseEntity.writeNbt(disguiseEntityTag);
 
-                    Identifier identifier = Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseEntity.getType());
-                    disguiseEntityTag.putString("id", identifier.toString());
+                Identifier identifier = Registry.ENTITY_TYPE.getId(this.disguiselib$disguiseEntity.getType());
+                disguiseEntityTag.putString("id", identifier.toString());
 
-                    disguiseTag.put("DisguiseEntity", disguiseEntityTag);
-                }
-
-                tag.put("DisguiseLib", disguiseTag);
+                disguiseTag.put("DisguiseEntity", disguiseEntityTag);
             }
-        } catch (Error e) {
-            e.printStackTrace();
-        }
 
+            tag.put("DisguiseLib", disguiseTag);
+        }
     }
 }
