@@ -3,16 +3,6 @@ plugins {
 }
 
 repositories {
-    maven {
-        url 'https://oss.sonatype.org/content/repositories/snapshots'
-    }
-    maven {
-        url 'https://maven.bymartrixx.me'
-    }
-    maven {
-        name = "TomTheGeek-repo"
-        url = "https://maven.tomthegeek.ml/releases/"
-    }
 }
 
 architectury {
