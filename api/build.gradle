@@ -5,7 +5,7 @@ dependencies {
 def ENV = System.getenv();
 
 architectury {
-    common(false)
+    common(Boolean.parseBoolean(rootProject.forge_enabled))
 }
 
 configurations {

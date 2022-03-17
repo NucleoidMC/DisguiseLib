@@ -10,4 +10,5 @@ pluginManagement {
 include("common")
 include("api")
 include("fabric")
-//include("forge")
+if (getProperty("forge_enabled"))
+    include("forge")
