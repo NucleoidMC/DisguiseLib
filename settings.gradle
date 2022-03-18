@@ -8,7 +8,7 @@ pluginManagement {
 }
 
 include("common")
-include("api")
+//include("api")
 include("fabric")
-if (getProperty("forge_enabled"))
+if (Boolean.parseBoolean(getProperty("forge_enabled")))
     include("forge")
