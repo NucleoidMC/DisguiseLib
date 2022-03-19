@@ -17,19 +17,10 @@ repositories {
 }
 
 dependencies {
-    // fabric
-    modImplementation "xyz.nucleoid:DisguiseLib:${project.disguiselib_version}"
+    // Common module
     modImplementation "xyz.nucleoid:DisguiseLib:${project.disguiselib_version}"
   
-    // jitpack - architectury
-    // Architectury (common module)
-    modImplementation "xyz.nucleoid:disguiselib-api:${project.disguiselib_version}"
-    
-    // API
     // Fabric
-    modImplementation "xyz.nucleoid:disguiselib-api:${project.disguiselib_version}"
-
-    // Implementations
     modImplementation "xyz.nucleoid:disguiselib-fabric:${project.disguiselib_version}"
     
     // Forge

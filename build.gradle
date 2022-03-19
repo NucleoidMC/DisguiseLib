@@ -21,7 +21,7 @@ subprojects {
 		mappings("net.fabricmc:yarn:${rootProject.yarn_mappings}:v2")
 	}
 
-	if (it.name != "api") {
+	/*if (it.name != "api") {
 
 		dependencies {
 			compileOnly project(":api")
@@ -35,7 +35,7 @@ subprojects {
 		tasks.withType(JavaCompile) {
 			source(project(":api").sourceSets.main.allSource)
 		}
-	}
+	}*/
 }
 
 allprojects {
