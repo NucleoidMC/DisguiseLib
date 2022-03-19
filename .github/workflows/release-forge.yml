@@ -31,7 +31,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build and publish with Gradle
-        run: ./gradlew fabric:build fabric:publish
+        run: ./gradlew forge:build forge:publish
         env:
           MAVEN_URL: ${{ secrets.MAVEN_URL }}
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
@@ -40,5 +40,5 @@ jobs:
       - name: Upload GitHub release
         uses: AButler/upload-release-assets@v2.0
         with:
-          files: 'fabric/build/libs/*-fabric.jar'
+          files: 'forge/build/libs/*-forge.jar'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
