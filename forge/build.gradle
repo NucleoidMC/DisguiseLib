@@ -24,10 +24,8 @@ loom {
 dependencies {
     forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
 
-    common(project(path: ':common', configuration: 'namedElements'))
-    shadowCommon(project(path: ":common", configuration: 'transformProductionForge')) {
-        transitive = false
-    }
+    common(project(path: ":common", configuration: "namedElements")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive false }
 }
 
 processResources {
@@ -50,6 +48,7 @@ remapJar {
     dependsOn shadowJar
     classifier "forge"
 }
+
 
 jar {
     classifier "dev"
