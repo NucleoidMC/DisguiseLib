@@ -15,7 +15,6 @@
     "accessor.EntitySpawnS2CPacketAccessor",
     "accessor.EntityTrackerEntryAccessor",
     "accessor.EntityTrackerUpdateS2CPacketAccessor",
-    "accessor.MobSpawnS2CPacketAccessor",
     "accessor.PlayerEntityAccessor",
     "accessor.PlayerListS2CPacketAccessor",
     "accessor.PlayerSpawnS2CPacketAccessor",
