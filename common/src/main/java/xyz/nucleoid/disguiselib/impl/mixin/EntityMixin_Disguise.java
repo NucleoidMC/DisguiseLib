@@ -32,10 +32,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -58,11 +56,7 @@ import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityTrackerEntryAccessor;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerListS2CPacketAccessor;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.ThreadedAnvilChunkStorageAccessor;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static net.minecraft.entity.EntityType.PLAYER;
@@ -168,7 +162,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
                 // Previous type was player, we have to send a player remove packet
                 PlayerListS2CPacket listPacket = new PlayerListS2CPacket(REMOVE_PLAYER);
                 PlayerListS2CPacketAccessor listPacketAccessor = (PlayerListS2CPacketAccessor) listPacket;
-                listPacketAccessor.setEntries(Arrays.asList(new PlayerListS2CPacket.Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
+                listPacketAccessor.setEntries(Arrays.asList(new PlayerListS2CPacket.Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, Text.literal(this.disguiselib$profile.getName()), null)));
                 manager.sendToAll(listPacket);
             }
 
@@ -347,7 +341,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Unique
     private void disguiselib$constructFakePlayer(@NotNull GameProfile profile) {
-        this.disguiselib$disguiseEntity = new ServerPlayerEntity(world.getServer(), (ServerWorld) world, profile);
+        this.disguiselib$disguiseEntity = new ServerPlayerEntity(world.getServer(), (ServerWorld) world, profile, null);
         this.disguiselib$disguiseEntity.getDataTracker().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
     }
 
@@ -372,7 +366,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
         PlayerListS2CPacket packet = new PlayerListS2CPacket(REMOVE_PLAYER);
         //noinspection ConstantConditions
         PlayerListS2CPacketAccessor accessor = (PlayerListS2CPacketAccessor) packet;
-        accessor.setEntries(Arrays.asList(new PlayerListS2CPacket.Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, new LiteralText(this.disguiselib$profile.getName()))));
+        accessor.setEntries(Arrays.asList(new PlayerListS2CPacket.Entry(this.disguiselib$profile, 0, GameMode.SURVIVAL, Text.literal(this.disguiselib$profile.getName()), null)));
 
         PlayerManager playerManager = this.world.getServer().getPlayerManager();
         playerManager.sendToAll(packet);
@@ -390,14 +384,15 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             ServerWorld targetWorld = player.getWorld();
 
             player.networkHandler.sendPacket(new PlayerRespawnS2CPacket(
-                    targetWorld.method_40134(),  // getDimension()
+                    targetWorld.getDimensionKey(),  // getDimension()
                     targetWorld.getRegistryKey(),
                     BiomeAccess.hashSeed(targetWorld.getSeed()),
                     player.interactionManager.getGameMode(),
                     player.interactionManager.getPreviousGameMode(),
                     targetWorld.isDebugWorld(),
                     targetWorld.isFlat(),
-                    true
+                    true,
+                    Optional.empty()
             ));
             player.networkHandler.requestTeleport(player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch());
 
@@ -451,8 +446,8 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
                 this.world.getServer().getPlayerManager().sendToDimension(new EntityPositionS2CPacket(this.disguiselib$entity), this.world.getRegistryKey());
             else if(this.disguiselib$entity instanceof ServerPlayerEntity && ++this.disguiselib$ticks % 40 == 0 && this.disguiselib$disguiseEntity != null) {
                 // "Disguised as" message
-                MutableText msg = new LiteralText("You are disguised as ")
-                        .append(new TranslatableText(this.disguiselib$disguiseEntity.getType().getTranslationKey()))
+                MutableText msg = Text.literal("You are disguised as ")
+                        .append(Text.translatable(this.disguiselib$disguiseEntity.getType().getTranslationKey()))
                         .formatted(Formatting.GREEN);
 
                 ((ServerPlayerEntity) this.disguiselib$entity).sendMessage(msg, true);
@@ -479,7 +474,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
             GameProfile profile = new GameProfile(this.disguiselib$entity.getUuid(), this.getName().getString());
             // Arrays.asList is needed as we PlayerList needs mutable list
-            listS2CPacketAccessor.setEntries(Arrays.asList(new PlayerListS2CPacket.Entry(profile, 0, GameMode.SURVIVAL, this.getName())));
+            listS2CPacketAccessor.setEntries(Arrays.asList(new PlayerListS2CPacket.Entry(profile, 0, GameMode.SURVIVAL, this.getName(), null)));
 
             PlayerManager manager = this.world.getServer().getPlayerManager();
             manager.sendToAll(packet);

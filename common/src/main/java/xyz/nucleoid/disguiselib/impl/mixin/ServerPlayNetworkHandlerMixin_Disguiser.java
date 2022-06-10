@@ -17,14 +17,13 @@ import net.minecraft.network.packet.s2c.play.EntitySetHeadYawS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Entry;
 import net.minecraft.network.packet.s2c.play.PlayerSpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.TeamS2CPacket;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,7 +41,6 @@ import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityPositionS2CPacketAcces
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntitySetHeadYawS2CPacketAccessor;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntitySpawnS2CPacketAccessor;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityTrackerUpdateS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.MobSpawnS2CPacketAccessor;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerListS2CPacketAccessor;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerSpawnS2CPacketAccessor;
 import xyz.nucleoid.disguiselib.impl.packets.FakePackets;
@@ -98,8 +96,6 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                 }
             } else if(packet instanceof PlayerSpawnS2CPacket) {
                 entity = world.getEntityById(((PlayerSpawnS2CPacketAccessor) packet).getId());
-            } else if(packet instanceof MobSpawnS2CPacket) {
-                entity = world.getEntityById(((MobSpawnS2CPacketAccessor) packet).getEntityId());
             } else if(packet instanceof EntitySpawnS2CPacket) {
                 entity = world.getEntityById(((EntitySpawnS2CPacketAccessor) packet).getEntityId());
             } else if(packet instanceof EntitiesDestroyS2CPacket && ((EntitiesDestroyS2CPacketAccessor) packet).getEntityIds().getInt(0) == this.player.getId()) {
@@ -190,7 +186,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
 
             // Arrays.asList is used as it returns mutable map, otherwise
             // this packet can cause some issues with other mods.
-            listS2CPacketAccessor.setEntries(Arrays.asList(new Entry(profile, 0, GameMode.SURVIVAL, new LiteralText(profile.getName()))));
+            listS2CPacketAccessor.setEntries(Arrays.asList(new Entry(profile, 0, GameMode.SURVIVAL, Text.literal(profile.getName()), null)));
 
             this.sendPacket(packet);
 
@@ -198,7 +194,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                 packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
                 //noinspection ConstantConditions
                 listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
-                listS2CPacketAccessor.setEntries(Arrays.asList(new Entry(profile, 0, GameMode.SURVIVAL, new LiteralText(profile.getName()))));
+                listS2CPacketAccessor.setEntries(Arrays.asList(new Entry(profile, 0, GameMode.SURVIVAL, Text.literal(profile.getName()), null)));
 
                 this.disguiselib$q.add(packet);
                 this.disguiselib$qTimer = 50;
@@ -210,10 +206,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             // Well, sending spawn packet of the new entity makes the player not being able to move :(
             if(disguise.getDisguiseType() != EntityType.PLAYER && disguise.isDisguised()) {
                 if(disguiseEntity != null) {
-                    if(spawnPacket instanceof MobSpawnS2CPacket) {
-                        ((MobSpawnS2CPacketAccessor) spawnPacket).setEntityId(disguiseEntity.getId());
-                        ((MobSpawnS2CPacketAccessor) spawnPacket).setUuid(disguiseEntity.getUuid());
-                    } else if(spawnPacket instanceof EntitySpawnS2CPacket) {
+                    if(spawnPacket instanceof EntitySpawnS2CPacket) {
                         ((EntitySpawnS2CPacketAccessor) spawnPacket).setEntityId(disguiseEntity.getId());
                         ((EntitySpawnS2CPacketAccessor) spawnPacket).setUuid(disguiseEntity.getUuid());
                     }

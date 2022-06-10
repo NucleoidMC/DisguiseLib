@@ -8,14 +8,11 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
-import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerSpawnS2CPacket;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
 import xyz.nucleoid.disguiselib.api.EntityDisguise;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntitySpawnS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.MobSpawnS2CPacketAccessor;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerSpawnS2CPacketAccessor;
 
 public class FakePackets {
@@ -35,10 +32,8 @@ public class FakePackets {
 
         Packet<?> packet = disguise.createSpawnPacket();
 
-        if(packet instanceof MobSpawnS2CPacket) {
+        if(packet instanceof EntitySpawnS2CPacket) {
             packet = fakeMobSpawnS2CPacket(entity);
-        } else if(packet instanceof EntitySpawnS2CPacket) {
-            packet = fakeEntitySpawnS2CPacket(entity);
         } else if(packet instanceof PlayerSpawnS2CPacket) {
             packet = fakePlayerSpawnS2CPacket(entity);
         }
@@ -47,21 +42,21 @@ public class FakePackets {
     }
 
     /**
-     * Constructs a fake {@link MobSpawnS2CPacket} for the given entity.
+     * Constructs a fake {@link EntitySpawnS2CPacket} for the given entity.
      *
      * @param entity entity that requires fake packet
      *
-     * @return fake {@link MobSpawnS2CPacket}
+     * @return fake {@link EntitySpawnS2CPacket}
      */
-    public static MobSpawnS2CPacket fakeMobSpawnS2CPacket(Entity entity) {
+    public static EntitySpawnS2CPacket fakeMobSpawnS2CPacket(Entity entity) {
         EntityDisguise disguise = (EntityDisguise) entity;
-        MobSpawnS2CPacket packet = new MobSpawnS2CPacket((LivingEntity) disguise.getDisguiseEntity());
+        EntitySpawnS2CPacket packet = new EntitySpawnS2CPacket((LivingEntity) disguise.getDisguiseEntity());
 
-        MobSpawnS2CPacketAccessor accessor = (MobSpawnS2CPacketAccessor) packet;
+        EntitySpawnS2CPacketAccessor accessor = (EntitySpawnS2CPacketAccessor) packet;
         accessor.setEntityId(entity.getId());
         accessor.setUuid(entity.getUuid());
 
-        accessor.setEntityType(Registry.ENTITY_TYPE.getRawId(disguise.getDisguiseType()));
+        accessor.setEntityType(disguise.getDisguiseType());
         accessor.setX(entity.getX());
         accessor.setY(entity.getY());
         accessor.setZ(entity.getZ());
