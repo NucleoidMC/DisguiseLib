@@ -14,9 +14,4 @@ public interface PlayerListS2CPacketAccessor {
     void setEntries(List<PlayerListS2CPacket.Entry> entries);
     @Accessor("entries")
     List<PlayerListS2CPacket.Entry> getEntries();
-    @Mutable
-    @Accessor("action")
-    void setAction(PlayerListS2CPacket.Action action);
-    @Accessor("action")
-    PlayerListS2CPacket.Action getAction();
 }

@@ -15,5 +15,5 @@ public interface EntityTrackerUpdateS2CPacketAccessor {
 
     @Mutable
     @Accessor("trackedValues")
-    void setTrackedValues(List<DataTracker.Entry<?>> trackedValues);
+    void setTrackedValues(List<DataTracker.SerializedEntry<?>> trackedValues);
 }

@@ -1,30 +1,18 @@
 package xyz.nucleoid.disguiselib.impl.mixin;
 
 import com.mojang.authlib.GameProfile;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketCallbacks;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntityAttributesS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntityPositionS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntitySetHeadYawS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Entry;
-import net.minecraft.network.packet.s2c.play.PlayerSpawnS2CPacket;
-import net.minecraft.network.packet.s2c.play.TeamS2CPacket;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,21 +22,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.nucleoid.disguiselib.api.DisguiseUtils;
 import xyz.nucleoid.disguiselib.api.EntityDisguise;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntitiesDestroyS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityAccessor;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityAttributesS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityPositionS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntitySetHeadYawS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntitySpawnS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityTrackerUpdateS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerListS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerSpawnS2CPacketAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.*;
 import xyz.nucleoid.disguiselib.impl.packets.FakePackets;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket.BRAND;
 import static xyz.nucleoid.disguiselib.impl.DisguiseLib.DISGUISE_TEAM;
@@ -78,40 +55,40 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
      * @param packet packet being sent
      */
     @Inject(
-            method = "sendPacket(Lnet/minecraft/network/Packet;Lio/netty/util/concurrent/GenericFutureListener;)V",
+            method = "sendPacket(Lnet/minecraft/network/Packet;Lnet/minecraft/network/PacketCallbacks;)V",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;Lio/netty/util/concurrent/GenericFutureListener;)V"
+                    target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/Packet;Lnet/minecraft/network/PacketCallbacks;)V"
             ),
             cancellable = true
     )
-    private void disguiseEntity(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>> listener, CallbackInfo ci) {
-        if(!this.disguiselib$skipCheck) {
+    private void disguiseEntity(Packet<?> packet, PacketCallbacks callbacks, CallbackInfo ci) {
+        if (!this.disguiselib$skipCheck) {
             World world = this.player.getEntityWorld();
             Entity entity = null;
-            if(packet instanceof PlayerListS2CPacket && ((PlayerListS2CPacketAccessor) packet).getAction().equals(PlayerListS2CPacket.Action.ADD_PLAYER)) {
+            if (packet instanceof PlayerListS2CPacket && ((PlayerListS2CPacket) packet).getActions().stream().toList().get(0).equals(PlayerListS2CPacket.Action.ADD_PLAYER)) {
                 Entry entry = ((PlayerListS2CPacketAccessor) packet).getEntries().get(0);
-                if(this.player.getGameProfile().getId().equals(entry.getProfile().getId()) && ((EntityDisguise) this.player).isDisguised()) {
+                if (this.player.getGameProfile().getId().equals(entry.profileId()) && ((EntityDisguise) this.player).isDisguised()) {
                     entity = this.player;
                 }
-            } else if(packet instanceof PlayerSpawnS2CPacket) {
+            } else if (packet instanceof PlayerSpawnS2CPacket) {
                 entity = world.getEntityById(((PlayerSpawnS2CPacketAccessor) packet).getId());
-            } else if(packet instanceof EntitySpawnS2CPacket) {
+            } else if (packet instanceof EntitySpawnS2CPacket) {
                 entity = world.getEntityById(((EntitySpawnS2CPacketAccessor) packet).getEntityId());
-            } else if(packet instanceof EntitiesDestroyS2CPacket && ((EntitiesDestroyS2CPacketAccessor) packet).getEntityIds().getInt(0) == this.player.getId()) {
+            } else if (packet instanceof EntitiesDestroyS2CPacket && ((EntitiesDestroyS2CPacketAccessor) packet).getEntityIds().getInt(0) == this.player.getId()) {
                 ci.cancel();
                 return;
             } else if(packet instanceof EntityTrackerUpdateS2CPacket) {
                 // an ugly fix for #6
                 int entityId = ((EntityTrackerUpdateS2CPacketAccessor) packet).getEntityId();
                 if(entityId == this.player.getId() && ((EntityDisguise) this.player).isDisguised()) {
-                    List<DataTracker.Entry<?>> trackedValues = this.player.getDataTracker().getAllEntries();
+                    List<DataTracker.SerializedEntry<?>> trackedValues = this.player.getDataTracker().getChangedEntries();
                     if(((EntityDisguise) this.player).getDisguiseType() != EntityType.PLAYER) {
                         Byte flags = this.player.getDataTracker().get(EntityAccessor.getFLAGS());
 
-                        boolean removed = trackedValues.removeIf(entry -> entry.get().equals(flags));
+                        boolean removed = trackedValues.removeIf(entry -> entry.value().equals(flags));
                         if(removed) {
-                            DataTracker.Entry<Byte> fakeInvisibleFlag = new DataTracker.Entry<>(EntityAccessor.getFLAGS(), (byte)(flags | 1 << 5));
+                            DataTracker.SerializedEntry<Byte> fakeInvisibleFlag = DataTracker.SerializedEntry.of(EntityAccessor.getFLAGS(), (byte) (flags | 1 << 5));
                             trackedValues.add(fakeInvisibleFlag);
                         }
                     }
@@ -126,7 +103,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
                         Entity disguised = ((EntityDisguise) original).getDisguiseEntity();
                         if(disguised != null) {
                             ((DisguiseUtils) original).updateTrackedData();
-                            List<DataTracker.Entry<?>> trackedValues = disguised.getDataTracker().getAllEntries();
+                            List<DataTracker.SerializedEntry<?>> trackedValues = disguised.getDataTracker().getChangedEntries();
                             ((EntityTrackerUpdateS2CPacketAccessor) packet).setTrackedValues(trackedValues);
                         }
                     }
@@ -179,34 +156,23 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             spawnPacket = FakePackets.universalSpawnPacket(entity);
 
         this.disguiselib$skipCheck = true;
-        if(disguise.getDisguiseType() == EntityType.PLAYER) {
-            PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER);
-            //noinspection ConstantConditions
-            PlayerListS2CPacketAccessor listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
-
-            // Arrays.asList is used as it returns mutable map, otherwise
-            // this packet can cause some issues with other mods.
-            listS2CPacketAccessor.setEntries(Arrays.asList(new Entry(profile, 0, GameMode.SURVIVAL, Text.literal(profile.getName()), null)));
-
+        if (disguise.getDisguiseType() == EntityType.PLAYER) {
+            PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER, (ServerPlayerEntity) disguiseEntity);
             this.sendPacket(packet);
 
-            if(!(entity instanceof PlayerEntity)) {
-                packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER);
-                //noinspection ConstantConditions
-                listS2CPacketAccessor = (PlayerListS2CPacketAccessor) packet;
-                listS2CPacketAccessor.setEntries(Arrays.asList(new Entry(profile, 0, GameMode.SURVIVAL, Text.literal(profile.getName()), null)));
-
-                this.disguiselib$q.add(packet);
+            if (!(entity instanceof PlayerEntity)) {
+                var playerRemovePacket = new PlayerRemoveS2CPacket(new ArrayList<>(Collections.singletonList(profile.getId())));
+                this.disguiselib$q.add(playerRemovePacket);
                 this.disguiselib$qTimer = 50;
             }
         }
-        if(entity.getId() == this.player.getId()) {
+        if (entity.getId() == this.player.getId()) {
             // We must treat disguised player differently
             // Why, I hear you ask ..?
             // Well, sending spawn packet of the new entity makes the player not being able to move :(
-            if(disguise.getDisguiseType() != EntityType.PLAYER && disguise.isDisguised()) {
-                if(disguiseEntity != null) {
-                    if(spawnPacket instanceof EntitySpawnS2CPacket) {
+            if (disguise.getDisguiseType() != EntityType.PLAYER && disguise.isDisguised()) {
+                if (disguiseEntity != null) {
+                    if (spawnPacket instanceof EntitySpawnS2CPacket) {
                         ((EntitySpawnS2CPacketAccessor) spawnPacket).setEntityId(disguiseEntity.getId());
                         ((EntitySpawnS2CPacketAccessor) spawnPacket).setUuid(disguiseEntity.getUuid());
                     }
@@ -272,13 +238,13 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
 
     @Inject(method = "onCustomPayload(Lnet/minecraft/network/packet/c2s/play/CustomPayloadC2SPacket;)V", at = @At("TAIL"))
     private void onClientBrand(CustomPayloadC2SPacket packet, CallbackInfo ci) {
-        if(!this.disguiselib$sentTeamPacket && packet.getChannel().equals(BRAND)) {
+        if (!this.disguiselib$sentTeamPacket && packet.getChannel().equals(BRAND)) {
             // Disabling collisions with the disguised entity itself
             TeamS2CPacket addTeamPacket = TeamS2CPacket.updateTeam(DISGUISE_TEAM, true); // create team
             this.disguiselib$sentTeamPacket = true;
             this.sendPacket(addTeamPacket);
 
-            if(((EntityDisguise) this.player).isDisguised()) {
+            if (((EntityDisguise) this.player).isDisguised()) {
                 // Send join team packet to prevent "sliding"
                 TeamS2CPacket joinTeamPacket = TeamS2CPacket.changePlayerTeam(DISGUISE_TEAM, this.player.getGameProfile().getName(), TeamS2CPacket.Operation.ADD); // join team
                 this.sendPacket(joinTeamPacket);
