@@ -66,12 +66,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
         if (!this.disguiselib$skipCheck) {
             World world = this.player.getEntityWorld();
             Entity entity = null;
-            if (packet instanceof PlayerListS2CPacket && ((PlayerListS2CPacket) packet).getActions().stream().toList().get(0).equals(PlayerListS2CPacket.Action.ADD_PLAYER)) {
-                Entry entry = ((PlayerListS2CPacketAccessor) packet).getEntries().get(0);
-                if (this.player.getGameProfile().getId().equals(entry.profileId()) && ((EntityDisguise) this.player).isDisguised()) {
-                    entity = this.player;
-                }
-            } else if (packet instanceof PlayerSpawnS2CPacket) {
+            if (packet instanceof PlayerSpawnS2CPacket) {
                 entity = world.getEntityById(((PlayerSpawnS2CPacketAccessor) packet).getId());
             } else if (packet instanceof EntitySpawnS2CPacket) {
                 entity = world.getEntityById(((EntitySpawnS2CPacketAccessor) packet).getEntityId());
