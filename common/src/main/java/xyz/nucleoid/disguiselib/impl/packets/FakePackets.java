@@ -50,7 +50,7 @@ public class FakePackets {
      */
     public static EntitySpawnS2CPacket fakeMobSpawnS2CPacket(Entity entity) {
         EntityDisguise disguise = (EntityDisguise) entity;
-        EntitySpawnS2CPacket packet = new EntitySpawnS2CPacket((LivingEntity) disguise.getDisguiseEntity());
+        EntitySpawnS2CPacket packet = new EntitySpawnS2CPacket(disguise.getDisguiseEntity());
 
         EntitySpawnS2CPacketAccessor accessor = (EntitySpawnS2CPacketAccessor) packet;
         accessor.setEntityId(entity.getId());
