@@ -29,15 +29,19 @@ public class FakePackets {
             disguise = entity;
         }
 
-        Packet<?> packet = disguise.createSpawnPacket();
+        try {
+            Packet<?> packet = disguise.createSpawnPacket();
 
-        if(packet instanceof EntitySpawnS2CPacket) {
-            packet = fakeMobSpawnS2CPacket(entity);
-        } else if(packet instanceof PlayerSpawnS2CPacket) {
-            packet = fakePlayerSpawnS2CPacket(entity);
+            if(packet instanceof EntitySpawnS2CPacket) {
+                packet = fakeMobSpawnS2CPacket(entity);
+            } else if(packet instanceof PlayerSpawnS2CPacket) {
+                packet = fakePlayerSpawnS2CPacket(entity);
+            }
+
+            return packet;
+        } catch (Throwable e) {
+            return entity.createSpawnPacket();
         }
-
-        return packet;
     }
 
     /**
@@ -55,7 +59,9 @@ public class FakePackets {
         accessor.setEntityId(entity.getId());
         accessor.setUuid(entity.getUuid());
 
-        accessor.setEntityType(disguise.getDisguiseType());
+        var type = disguise.getDisguiseType();
+
+        accessor.setEntityType(type == EntityType.MARKER ? type: EntityType.PIG);
         accessor.setX(entity.getX());
         accessor.setY(entity.getY());
         accessor.setZ(entity.getZ());
