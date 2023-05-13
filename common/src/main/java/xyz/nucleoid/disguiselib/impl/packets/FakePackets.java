@@ -61,7 +61,7 @@ public class FakePackets {
 
         var type = disguise.getDisguiseType();
 
-        accessor.setEntityType(type == EntityType.MARKER ? type: EntityType.PIG);
+        accessor.setEntityType(type != EntityType.MARKER ? type : EntityType.PIG);
         accessor.setX(entity.getX());
         accessor.setY(entity.getY());
         accessor.setZ(entity.getZ());
