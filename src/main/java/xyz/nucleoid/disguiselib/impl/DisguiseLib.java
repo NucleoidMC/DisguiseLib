@@ -1,5 +1,6 @@
 package xyz.nucleoid.disguiselib.impl;
 
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.Team;
@@ -17,6 +18,8 @@ public class DisguiseLib {
 	public static void init() {
 		DISGUISE_TEAM.setCollisionRule(AbstractTeam.CollisionRule.PUSH_OTHER_TEAMS);
 		getLogger("DisguiseLib").info("DisguiseLib loaded.");
+
+		CommandRegistrationCallback.EVENT.register(DisguiseCommand::register);
 	}
 
 	public static void setPlayerClientVisibility(boolean clientVisibility) {
