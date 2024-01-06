@@ -79,7 +79,7 @@ public class DisguiseCommand {
         }
 
         profile = new GameProfile(null, playername);  //fixme profile doesn't contain skin data; migrate to fabrictailor
-        SkullBlockEntity.loadProperties(profile, gameProfile -> {
+        /*SkullBlockEntity.loadProperties(profile, gameProfile -> {
             // Minecraft doesn't allow "summoning" players, that's why we make an exception
             GameProfile finalProfile = gameProfile == null ? player.getGameProfile() : gameProfile;
             entities.forEach(entity -> {
@@ -103,7 +103,7 @@ public class DisguiseCommand {
                         src.sendError(NO_PERMISSION_ERROR);
                 }
             });
-        });
+        });*/
         return 0;
     }
 

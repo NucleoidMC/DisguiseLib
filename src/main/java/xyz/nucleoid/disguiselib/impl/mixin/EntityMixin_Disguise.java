@@ -11,6 +11,7 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKey;
@@ -329,7 +330,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Unique
     private void disguiselib$constructFakePlayer(@NotNull GameProfile profile) {
-        this.disguiselib$disguiseEntity = new ServerPlayerEntity(world.getServer(), (ServerWorld) world, profile);
+        this.disguiselib$disguiseEntity = new ServerPlayerEntity(world.getServer(), (ServerWorld) world, profile, SyncedClientOptions.createDefault());
         this.disguiselib$disguiseEntity.getDataTracker().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
     }
 
@@ -372,18 +373,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
         if (this.disguiselib$entity instanceof ServerPlayerEntity player) {
             ServerWorld targetWorld = (ServerWorld) player.getWorld();
 
-            player.networkHandler.sendPacket(new PlayerRespawnS2CPacket(
-                    targetWorld.getDimensionKey(),  // getDimension()
-                    targetWorld.getRegistryKey(),
-                    BiomeAccess.hashSeed(targetWorld.getSeed()),
-                    player.interactionManager.getGameMode(),
-                    player.interactionManager.getPreviousGameMode(),
-                    targetWorld.isDebugWorld(),
-                    targetWorld.isFlat(),
-                    (byte) 3,
-                    Optional.empty(),
-                    player.getPortalCooldown()
-            ));
+            player.networkHandler.sendPacket(new PlayerRespawnS2CPacket(player.createCommonPlayerSpawnInfo(targetWorld), PlayerRespawnS2CPacket.KEEP_ALL));
             player.networkHandler.requestTeleport(player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch());
 
             player.server.getPlayerManager().sendCommandTree(player);

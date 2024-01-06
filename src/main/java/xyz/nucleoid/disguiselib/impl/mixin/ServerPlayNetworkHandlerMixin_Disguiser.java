@@ -5,12 +5,14 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.ClientConnection;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.Packet;
-import net.minecraft.network.PacketCallbacks;
-import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ConnectedClientData;
+import net.minecraft.server.network.ServerCommonNetworkHandler;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.World;
@@ -23,23 +25,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import xyz.nucleoid.disguiselib.api.DisguiseUtils;
 import xyz.nucleoid.disguiselib.api.EntityDisguise;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.*;
+import xyz.nucleoid.disguiselib.impl.packets.ExtendedHandler;
 import xyz.nucleoid.disguiselib.impl.packets.FakePackets;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import static net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket.BRAND;
 import static xyz.nucleoid.disguiselib.impl.DisguiseLib.DISGUISE_TEAM;
 
 @Mixin(ServerPlayNetworkHandler.class)
-public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
+public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerCommonNetworkHandler implements ExtendedHandler {
     @Shadow public ServerPlayerEntity player;
 
-    @Shadow public abstract void sendPacket(Packet<?> packet);
-
-    @Unique
-    private boolean disguiselib$skipCheck;
     @Unique
     private final Set<Packet<?>> disguiselib$q = new HashSet<>();
     @Unique
@@ -47,59 +44,14 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
     @Unique
     private boolean disguiselib$sentTeamPacket;
 
-    /**
-     * Checks the packet that was sent. If the entity in the packet is disguised, the
-     * entity type / id in the packet will be changed.
-     *
-     * As minecraft client doesn't allow moving if you send it an entity with the same
-     * id as player, we send the disguised player another entity, so they will see their
-     * own disguise.
-     *
-     * @param packet packet being sent
-     */
-    @Inject(
-            method = "sendPacket(Lnet/minecraft/network/packet/Packet;Lnet/minecraft/network/PacketCallbacks;)V",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/packet/Packet;Lnet/minecraft/network/PacketCallbacks;)V"
-            ),
-            cancellable = true
-    )
-    private void disguiseEntity(Packet<ClientPlayPacketListener> packet, PacketCallbacks callbacks, CallbackInfo ci) {
-        if (!this.disguiselib$skipCheck) {
-            if (packet instanceof BundleS2CPacket bundleS2CPacket) {
-                if (bundleS2CPacket.getPackets() instanceof ArrayList<Packet<ClientPlayPacketListener>> list) {
-                    var list2 = new ArrayList<Packet<ClientPlayPacketListener>>();
-                    var adder = new ArrayList<Packet<ClientPlayPacketListener>>();
-                    var atomic = new AtomicBoolean(true);
-                    for (var packet2 : list) {
-                        atomic.set(true);
-                        adder.clear();
-                        this.disguiselib$transformPacket(packet2, () -> atomic.set(false), list2::add);
-
-                        if (atomic.get()) {
-                            list2.add(packet2);
-                        }
-
-                        list2.addAll(adder);
-                    }
-
-                    list.clear();
-                    list.addAll(list2);
-                }
-            } else {
-                this.disguiselib$transformPacket(packet, ci::cancel, this::sendPacket);
-            }
-        }
+    public ServerPlayNetworkHandlerMixin_Disguiser(MinecraftServer server, ClientConnection connection, ConnectedClientData clientData) {
+        super(server, connection, clientData);
     }
 
-    @Unique
-    private void disguiselib$transformPacket(Packet<ClientPlayPacketListener> packet, Runnable remove, Consumer<Packet<ClientPlayPacketListener>> add) {
+    public void disguiselib$transformPacket(Packet<ClientPlayPacketListener> packet, Runnable remove, Consumer<Packet<ClientPlayPacketListener>> add) {
         World world = this.player.getEntityWorld();
         Entity entity = null;
-        if (packet instanceof PlayerSpawnS2CPacket) {
-            entity = world.getEntityById(((PlayerSpawnS2CPacketAccessor) packet).getId());
-        } else if (packet instanceof EntitySpawnS2CPacket) {
+        if (packet instanceof EntitySpawnS2CPacket) {
             entity = world.getEntityById(((EntitySpawnS2CPacketAccessor) packet).getEntityId());
         } else if (packet instanceof EntitiesDestroyS2CPacket && !((EntitiesDestroyS2CPacketAccessor) packet).getEntityIds().isEmpty() && ((EntitiesDestroyS2CPacketAccessor) packet).getEntityIds().getInt(0) == this.player.getId()) {
             remove.run();
@@ -180,7 +132,6 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
         else
             spawnPacket = FakePackets.universalSpawnPacket(entity);
 
-        this.disguiselib$skipCheck = true;
         if (disguise.getDisguiseType() == EntityType.PLAYER) {
             PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER, (ServerPlayerEntity) disguiseEntity);
             add.accept(packet);
@@ -217,9 +168,6 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
             add.accept((Packet<ClientPlayPacketListener>) spawnPacket);
             remove.run();
         }
-
-
-        this.disguiselib$skipCheck = false;
     }
 
 
@@ -252,18 +200,12 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
         if(!this.disguiselib$q.isEmpty() && --this.disguiselib$qTimer <= 0) {
             // fixme - non-living disguised as player still not showing up
             // fixme - player sometimes gets removed from tablist :(
-            this.disguiselib$skipCheck = true;
             this.disguiselib$q.forEach(this::sendPacket);
-            this.disguiselib$q.clear();
-            this.disguiselib$skipCheck = false;
-        }
+            this.disguiselib$q.clear();}
     }
 
-
-
-    @Inject(method = "onCustomPayload(Lnet/minecraft/network/packet/c2s/play/CustomPayloadC2SPacket;)V", at = @At("TAIL"))
-    private void onClientBrand(CustomPayloadC2SPacket packet, CallbackInfo ci) {
-        if (!this.disguiselib$sentTeamPacket && packet.getChannel().equals(BRAND)) {
+    public void disguiselib$onClientBrand() {
+        if (!this.disguiselib$sentTeamPacket) {
             // Disabling collisions with the disguised entity itself
             TeamS2CPacket addTeamPacket = TeamS2CPacket.updateTeam(DISGUISE_TEAM, true); // create team
             this.disguiselib$sentTeamPacket = true;

@@ -7,12 +7,10 @@ import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerSpawnS2CPacket;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import xyz.nucleoid.disguiselib.api.EntityDisguise;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntitySpawnS2CPacketAccessor;
-import xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerSpawnS2CPacketAccessor;
 
 public class FakePackets {
     /**
@@ -34,8 +32,6 @@ public class FakePackets {
 
             if(packet instanceof EntitySpawnS2CPacket) {
                 packet = fakeMobSpawnS2CPacket(entity);
-            } else if(packet instanceof PlayerSpawnS2CPacket) {
-                packet = fakePlayerSpawnS2CPacket(entity);
             }
 
             return packet;
@@ -100,39 +96,6 @@ public class FakePackets {
                     )
             );
         }
-
-        return packet;
-    }
-
-    /**
-     * Constructs a fake {@link PlayerSpawnS2CPacket} for the given entity.
-     * Make sure you send the {@link net.minecraft.network.packet.s2c.play.PlayerListS2CPacket} as well
-     * if you're using this for yourself!
-     *
-     * @param entity entity that requires fake packet
-     *
-     * @return fake {@link PlayerSpawnS2CPacket}
-     */
-    public static PlayerSpawnS2CPacket fakePlayerSpawnS2CPacket(Entity entity) {
-        Entity disguise = ((EntityDisguise) entity).getDisguiseEntity();
-        PlayerSpawnS2CPacket packet;
-
-        if (disguise instanceof PlayerEntity playerDisguise)  // Needed in case of taterzens - when they're disguised "back" to players, the check will be false
-            packet = new PlayerSpawnS2CPacket(playerDisguise);
-        else
-            packet = new PlayerSpawnS2CPacket(entity.getServer().getPlayerManager().getPlayerList().get(0));
-
-        PlayerSpawnS2CPacketAccessor accessor = (PlayerSpawnS2CPacketAccessor) packet;
-
-        accessor.setId(entity.getId());
-        accessor.setUuid(entity.getUuid());
-
-        accessor.setX(entity.getX());
-        accessor.setY(entity.getY());
-        accessor.setZ(entity.getZ());
-
-        accessor.setYaw((byte) ((int) (entity.getYaw() * 256.0F / 360.0F)));
-        accessor.setPitch((byte) ((int) (entity.getPitch() * 256.0F / 360.0F)));
 
         return packet;
     }
