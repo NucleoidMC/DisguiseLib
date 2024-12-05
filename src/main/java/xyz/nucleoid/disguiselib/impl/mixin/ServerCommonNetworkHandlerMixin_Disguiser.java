@@ -66,9 +66,9 @@ public abstract class ServerCommonNetworkHandlerMixin_Disguiser {
                 return;
             }
             if (packet instanceof BundleS2CPacket bundleS2CPacket) {
-                if (bundleS2CPacket.getPackets() instanceof ArrayList<Packet<ClientPlayPacketListener>> list) {
-                    var list2 = new ArrayList<Packet<ClientPlayPacketListener>>();
-                    var adder = new ArrayList<Packet<ClientPlayPacketListener>>();
+                if (bundleS2CPacket.getPackets() instanceof ArrayList<Packet<? super ClientPlayPacketListener>> list) {
+                    var list2 = new ArrayList<Packet<? super ClientPlayPacketListener>>();
+                    var adder = new ArrayList<Packet<? super ClientPlayPacketListener>>();
                     var atomic = new AtomicBoolean(true);
                     for (var packet2 : list) {
                         atomic.set(true);

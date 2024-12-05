@@ -10,8 +10,10 @@ import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.NbtCompoundArgumentType;
 import net.minecraft.command.argument.RegistryEntryArgumentType;
+import net.minecraft.command.argument.RegistryEntryReferenceArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
@@ -41,7 +43,7 @@ public class DisguiseCommand {
                 .requires(src -> src.hasPermissionLevel(2))
                 .then(argument("target", entities())
                         .then(literal("as")
-                            .then(argument("disguise", RegistryEntryArgumentType.registryEntry(commandRegistryAccess, RegistryKeys.ENTITY_TYPE))
+                            .then(argument("disguise", new RegistryEntryReferenceArgumentType<>(commandRegistryAccess, RegistryKeys.ENTITY_TYPE))
                                 .suggests(SUMMONABLE_ENTITIES)
                                 .executes(DisguiseCommand::setDisguise)
                                     .then(argument("nbt", NbtCompoundArgumentType.nbtCompound())
@@ -130,7 +132,7 @@ public class DisguiseCommand {
     private static int setDisguise(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         Collection<? extends Entity> entities = EntityArgumentType.getEntities(ctx, "target");
         ServerCommandSource src = ctx.getSource();
-        var type = RegistryEntryArgumentType.getRegistryEntry(ctx, "disguise", RegistryKeys.ENTITY_TYPE);
+        var type = RegistryEntryReferenceArgumentType.getRegistryEntry(ctx, "disguise", RegistryKeys.ENTITY_TYPE);
         var disguise = Registries.ENTITY_TYPE.getId(type.value());
 
         NbtCompound nbt;
@@ -142,7 +144,7 @@ public class DisguiseCommand {
         nbt.putString("id", disguise.toString());
 
         NbtCompound finalNbt = nbt;
-        entities.forEach(entity -> EntityType.loadEntityWithPassengers(finalNbt, ctx.getSource().getWorld(), (entityx) -> {
+        entities.forEach(entity -> EntityType.loadEntityWithPassengers(finalNbt, ctx.getSource().getWorld(), SpawnReason.LOAD, (entityx) -> {
             if(entity == src.getEntity()) {
                 if(src.hasPermissionLevel(2))
                     ((EntityDisguise) entity).disguiseAs(entityx);

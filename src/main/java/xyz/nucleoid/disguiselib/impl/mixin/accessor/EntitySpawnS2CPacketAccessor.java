@@ -17,11 +17,11 @@ public interface EntitySpawnS2CPacketAccessor {
     @Accessor("entityData")
     void setEntityData(int entityData);
 
-    @Accessor("id")
+    @Accessor("entityId")
     int getEntityId();
 
     @Mutable
-    @Accessor("id")
+    @Accessor("entityId")
     void setEntityId(int id);
 
     @Mutable

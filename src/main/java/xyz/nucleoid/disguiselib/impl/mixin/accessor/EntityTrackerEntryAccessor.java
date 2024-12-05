@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Set;
 
-@Mixin(targets = "net.minecraft.server.world.ThreadedAnvilChunkStorage$EntityTracker")
+@Mixin(targets = "net.minecraft.server.world.ServerChunkLoadingManager$EntityTracker")
 public interface EntityTrackerEntryAccessor {
     @Accessor("entry")
     EntityTrackerEntry getEntry();
