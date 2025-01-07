@@ -83,9 +83,9 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
                 if(original != null && ((EntityDisguise) original).isDisguised()) {
                     Entity disguised = ((EntityDisguise) original).getDisguiseEntity();
                     if(disguised != null) {
+                        remove.run();
                         ((DisguiseUtils) original).updateTrackedData();
-                        List<DataTracker.SerializedEntry<?>> trackedValues = disguised.getDataTracker().getChangedEntries();
-                        ((EntityTrackerUpdateS2CPacketAccessor) packet).setTrackedValues(trackedValues);
+                        add.accept(new EntityTrackerUpdateS2CPacket(entityId, disguised.getDataTracker().getChangedEntries()));
                     }
                 }
             }
