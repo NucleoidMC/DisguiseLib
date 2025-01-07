@@ -73,7 +73,8 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
                         trackedValues.add(fakeInvisibleFlag);
                     }
                 }
-                ((EntityTrackerUpdateS2CPacketAccessor) packet).setTrackedValues(trackedValues);
+                remove.run();
+                add.accept(new EntityTrackerUpdateS2CPacket(entityId, trackedValues));
             } else if(!((EntityDisguise) this.player).hasTrueSight()) {
                 // Fixing "wrong data" client issue (#1)
                 // Just prevents the client from spamming the log
