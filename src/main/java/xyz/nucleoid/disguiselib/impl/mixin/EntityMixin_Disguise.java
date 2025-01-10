@@ -412,6 +412,10 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
         this.disguiselib$disguiseEntity.setOnFire(this.isOnFire());
         this.disguiselib$disguiseEntity.setSilent(this.isSilent());
         this.disguiselib$disguiseEntity.setPose(this.getPose());
+        //noinspection ConstantValue
+        if (this.disguiselib$disguiseEntity instanceof LivingEntity disguise && ((Object) this) instanceof LivingEntity self) {
+            disguise.getAttributes().setFrom(self.getAttributes());
+        }
     }
 
     /**
