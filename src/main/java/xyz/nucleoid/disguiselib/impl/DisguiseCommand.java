@@ -11,6 +11,7 @@ import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.NbtCompoundArgumentType;
 import net.minecraft.command.argument.RegistryEntryArgumentType;
 import net.minecraft.command.argument.RegistryEntryReferenceArgumentType;
+import net.minecraft.command.suggestion.SuggestionProviders;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
@@ -44,7 +45,7 @@ public class DisguiseCommand {
                 .then(argument("target", entities())
                         .then(literal("as")
                             .then(argument("disguise", new RegistryEntryReferenceArgumentType<>(commandRegistryAccess, RegistryKeys.ENTITY_TYPE))
-                                .suggests(SUMMONABLE_ENTITIES)
+                                .suggests(SuggestionProviders.cast(SUMMONABLE_ENTITIES))
                                 .executes(DisguiseCommand::setDisguise)
                                     .then(argument("nbt", NbtCompoundArgumentType.nbtCompound())
                                         .executes(DisguiseCommand::setDisguise)

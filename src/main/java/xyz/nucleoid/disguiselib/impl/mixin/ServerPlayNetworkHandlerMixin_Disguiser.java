@@ -49,7 +49,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
     }
 
     public void disguiselib$transformPacket(Packet<? super ClientPlayPacketListener> packet, Runnable remove, Consumer<Packet<ClientPlayPacketListener>> add) {
-        World world = this.player.getEntityWorld();
+        World world = this.player.getWorld();
         if (packet instanceof EntitySpawnS2CPacket) {
             var entity = world.getEntityById(((EntitySpawnS2CPacketAccessor) packet).getEntityId());
 
@@ -129,7 +129,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
         }
 
         Packet<?> spawnPacket;
-        var entry = new EntityTrackerEntry((ServerWorld) entity.getWorld(), entity, 1, true, (c) -> {});
+        var entry = new EntityTrackerEntry((ServerWorld) entity.getWorld(), entity, 1, true, (c) -> {}, (a, b) -> {});
         if(((EntityDisguise) this.player).hasTrueSight() || !disguise.isDisguised())
             spawnPacket = entity.createSpawnPacket(entry);
         else

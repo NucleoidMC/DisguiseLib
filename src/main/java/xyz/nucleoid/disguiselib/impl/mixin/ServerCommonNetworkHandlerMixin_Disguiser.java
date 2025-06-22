@@ -1,6 +1,7 @@
 package xyz.nucleoid.disguiselib.impl.mixin;
 
 import com.mojang.authlib.GameProfile;
+import io.netty.channel.ChannelFutureListener;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
@@ -56,11 +57,11 @@ public abstract class ServerCommonNetworkHandlerMixin_Disguiser {
             method = "send",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/packet/Packet;Lnet/minecraft/network/PacketCallbacks;Z)V"
+                    target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/packet/Packet;Lio/netty/channel/ChannelFutureListener;Z)V"
             ),
             cancellable = true
     )
-    private void disguiseEntity(Packet<ClientPlayPacketListener> packet, PacketCallbacks callbacks, CallbackInfo ci) {
+    private void disguiseEntity(Packet<? super ClientPlayPacketListener> packet, ChannelFutureListener channelFutureListener, CallbackInfo ci) {
         if (!this.disguiselib$skipCheck) {
             if (!(this instanceof ExtendedHandler self)) {
                 return;

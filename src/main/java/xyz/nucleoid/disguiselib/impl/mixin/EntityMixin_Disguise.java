@@ -21,6 +21,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ServerChunkLoadingManager;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -378,7 +380,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             player.networkHandler.sendPacket(new PlayerRespawnS2CPacket(player.createCommonPlayerSpawnInfo(targetWorld), PlayerRespawnS2CPacket.KEEP_ALL));
             player.networkHandler.requestTeleport(player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch());
 
-            player.server.getPlayerManager().sendCommandTree(player);
+            player.getServer().getPlayerManager().sendCommandTree(player);
 
             player.networkHandler.sendPacket(new ExperienceBarUpdateS2CPacket(player.experienceProgress, player.totalExperience, player.experienceLevel));
             player.networkHandler.sendPacket(new HealthUpdateS2CPacket(player.getHealth(), player.getHungerManager().getFoodLevel(), player.getHungerManager().getSaturationLevel()));
@@ -475,23 +477,23 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @param tag tag to load data from.
      */
     @Inject(
-            method = "readNbt(Lnet/minecraft/nbt/NbtCompound;)V",
+            method = "readData",
             at = @At("TAIL")
     )
-    private void fromTag(NbtCompound tag, CallbackInfo ci) {
-        NbtCompound disguiseTag = (NbtCompound) tag.get("DisguiseLib");
+    private void fromTag(ReadView tag, CallbackInfo ci) {
+        var disguiseTag = tag.getOptionalReadView("DisguiseLib");
 
-        if(disguiseTag != null) {
-            Identifier disguiseTypeId = Identifier.tryParse(disguiseTag.getString("DisguiseType"));
+        if(disguiseTag.isPresent()) {
+            Identifier disguiseTypeId = Identifier.tryParse(disguiseTag.get().getString("DisguiseType", ""));
             this.disguiselib$disguiseType = Registries.ENTITY_TYPE.get(disguiseTypeId);
 
             if(this.disguiselib$disguiseType == PLAYER) {
                 this.setGameProfile(new GameProfile(this.uuid, this.getName().getString()));
                 this.disguiselib$constructFakePlayer(this.disguiselib$profile);
             } else {
-                NbtCompound disguiseEntityTag = disguiseTag.getCompound("DisguiseEntity");
-                if(!disguiseEntityTag.isEmpty())
-                    this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag, this.world, SpawnReason.LOAD, (entityx) -> entityx);
+                var disguiseEntityTag = disguiseTag.get().getOptionalReadView("DisguiseEntity");
+                if(disguiseEntityTag.isPresent())
+                    this.disguiselib$disguiseEntity = EntityType.loadEntityWithPassengers(disguiseEntityTag.get(), this.world, SpawnReason.LOAD, (entityx) -> entityx);
             }
         }
     }
@@ -502,26 +504,22 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @param tag tag to save data to.
      */
     @Inject(
-            method = "writeNbt(Lnet/minecraft/nbt/NbtCompound;)Lnet/minecraft/nbt/NbtCompound;",
+            method = "writeData",
             at = @At("TAIL")
     )
-    private void toTag(NbtCompound tag, CallbackInfoReturnable<NbtCompound> cir) {
+    private void toTag(WriteView tag, CallbackInfo ci) {
         if(this.isDisguised()) {
-            NbtCompound disguiseTag = new NbtCompound();
+            var disguiseTag = tag.get("DisguiseLib");
 
             disguiseTag.putString("DisguiseType", Registries.ENTITY_TYPE.getId(this.disguiselib$disguiseType).toString());
 
             if(this.disguiselib$disguiseEntity != null && !this.disguiselib$entity.equals(this.disguiselib$disguiseEntity)) {
-                NbtCompound disguiseEntityTag = new NbtCompound();
-                this.disguiselib$disguiseEntity.writeNbt(disguiseEntityTag);
+                var disguiseEntityTag = disguiseTag.get("DisguiseEntity");
+                this.disguiselib$disguiseEntity.writeData(disguiseEntityTag);
 
                 Identifier identifier = Registries.ENTITY_TYPE.getId(this.disguiselib$disguiseEntity.getType());
-                disguiseEntityTag.putString("id", identifier.toString());
-
-                disguiseTag.put("DisguiseEntity", disguiseEntityTag);
+                disguiseEntityTag.putString("id", identifier.toString());;
             }
-
-            tag.put("DisguiseLib", disguiseTag);
         }
     }
 }
