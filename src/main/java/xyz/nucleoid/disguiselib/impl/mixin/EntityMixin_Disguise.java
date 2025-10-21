@@ -9,7 +9,7 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerPosition;
+import net.minecraft.entity.EntityPosition;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
@@ -155,7 +155,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
             if (this.disguiselib$profile != null) {
                 // Previous type was player, we have to send a player remove packet
-                PlayerRemoveS2CPacket listPacket = new PlayerRemoveS2CPacket(new ArrayList(Collections.singletonList(this.disguiselib$profile.getId())));
+                PlayerRemoveS2CPacket listPacket = new PlayerRemoveS2CPacket(new ArrayList(Collections.singletonList(this.disguiselib$profile.id())));
                 manager.sendToAll(listPacket);
             }
 
@@ -297,15 +297,15 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     public void setGameProfile(@Nullable GameProfile gameProfile) {
         this.disguiselib$profile = gameProfile;
         if(gameProfile != null) {
-            String name = gameProfile.getName();
+            String name = gameProfile.name();
             if(name.length() > 16) {
                 // Minecraft kicks players on such profile name received
                 name = name.substring(0, 16);
-                PropertyMap properties = gameProfile.getProperties();
-                this.disguiselib$profile = new GameProfile(gameProfile.getId(), name);
+                PropertyMap properties = gameProfile.properties();
+                this.disguiselib$profile = new GameProfile(gameProfile.id(), name);
                 Collection<Property> textures = properties.get("textures");
                 if(!textures.isEmpty())
-                    this.disguiselib$profile.getProperties().put("textures", textures.stream().findFirst().get());
+                    this.disguiselib$profile.properties().put("textures", textures.stream().findFirst().get());
             }
         }
 
@@ -322,7 +322,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
         ServerPlayerEntity player = (ServerPlayerEntity) this.disguiselib$entity;
         player.networkHandler.sendPacket(new EntitiesDestroyS2CPacket(this.disguiselib$disguiseEntity.getId()));
 
-        TeamS2CPacket removeTeamPacket = TeamS2CPacket.changePlayerTeam(DISGUISE_TEAM, player.getGameProfile().getName(), TeamS2CPacket.Operation.REMOVE);
+        TeamS2CPacket removeTeamPacket = TeamS2CPacket.changePlayerTeam(DISGUISE_TEAM, player.getGameProfile().name(), TeamS2CPacket.Operation.REMOVE);
         player.networkHandler.sendPacket(removeTeamPacket);
     }
 
@@ -356,7 +356,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Unique
     private void disguiselib$sendProfileUpdates() {
-        PlayerRemoveS2CPacket packet = new PlayerRemoveS2CPacket(new ArrayList(Collections.singletonList(this.disguiselib$profile.getId())));
+        PlayerRemoveS2CPacket packet = new PlayerRemoveS2CPacket(new ArrayList(Collections.singletonList(this.disguiselib$profile.id())));
 
         PlayerManager playerManager = this.world.getServer().getPlayerManager();
         playerManager.sendToAll(packet);
@@ -375,12 +375,12 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
         // Changing entity on client
         if (this.disguiselib$entity instanceof ServerPlayerEntity player) {
-            ServerWorld targetWorld = (ServerWorld) player.getWorld();
+            ServerWorld targetWorld = (ServerWorld) player.getEntityWorld();
 
             player.networkHandler.sendPacket(new PlayerRespawnS2CPacket(player.createCommonPlayerSpawnInfo(targetWorld), PlayerRespawnS2CPacket.KEEP_ALL));
             player.networkHandler.requestTeleport(player.getX(), player.getY(), player.getZ(), player.getYaw(), player.getPitch());
 
-            player.getServer().getPlayerManager().sendCommandTree(player);
+            player.getEntityWorld().getServer().getPlayerManager().sendCommandTree(player);
 
             player.networkHandler.sendPacket(new ExperienceBarUpdateS2CPacket(player.experienceProgress, player.totalExperience, player.experienceLevel));
             player.networkHandler.sendPacket(new HealthUpdateS2CPacket(player.getHealth(), player.getHungerManager().getFoodLevel(), player.getHungerManager().getSaturationLevel()));
@@ -434,7 +434,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
                 this.world.getServer().getPlayerManager().sendToDimension(
                         new EntityPositionS2CPacket(
                                 this.disguiselib$entity.getId(),
-                                new PlayerPosition(
+                                new EntityPosition(
                                         this.disguiselib$entity.getSyncedPos(),
                                         this.disguiselib$entity.getVelocity(),
                                         this.disguiselib$entity.getYaw(),
@@ -465,7 +465,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     private void onRemove(CallbackInfo ci) {
         if(this.isDisguised() && this.disguiselib$profile != null) {
             // If entity was killed, we should also send a remove player action packet
-            PlayerRemoveS2CPacket packet = new PlayerRemoveS2CPacket(new ArrayList<>(Collections.singletonList(this.disguiselib$profile.getId())));
+            PlayerRemoveS2CPacket packet = new PlayerRemoveS2CPacket(new ArrayList<>(Collections.singletonList(this.disguiselib$profile.id())));
             PlayerManager manager = this.world.getServer().getPlayerManager();
             manager.sendToAll(packet);
         }

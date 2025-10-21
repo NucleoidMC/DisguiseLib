@@ -24,6 +24,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import xyz.nucleoid.disguiselib.api.EntityDisguise;
 
 import java.util.Collection;
@@ -78,10 +79,10 @@ public class DisguiseCommand {
         try {
             playername = StringArgumentType.getString(ctx, "playername");
         } catch(IllegalArgumentException ignored) {
-            playername = player.getGameProfile().getName();
+            playername = player.getGameProfile().name();
         }
 
-        profile = new GameProfile(null, playername);  //fixme profile doesn't contain skin data; migrate to fabrictailor
+        profile = new GameProfile(Util.NIL_UUID, playername);  //fixme profile doesn't contain skin data; migrate to fabrictailor
         /*SkullBlockEntity.loadProperties(profile, gameProfile -> {
             // Minecraft doesn't allow "summoning" players, that's why we make an exception
             GameProfile finalProfile = gameProfile == null ? player.getGameProfile() : gameProfile;

@@ -5,7 +5,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerPosition;
+import net.minecraft.entity.EntityPosition;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.Packet;
@@ -30,6 +30,7 @@ import xyz.nucleoid.disguiselib.impl.packets.FakePackets;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static xyz.nucleoid.disguiselib.impl.DisguiseLib.DISGUISE_TEAM;
 
@@ -49,7 +50,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
     }
 
     public void disguiselib$transformPacket(Packet<? super ClientPlayPacketListener> packet, Runnable remove, Consumer<Packet<ClientPlayPacketListener>> add) {
-        World world = this.player.getWorld();
+        World world = this.player.getEntityWorld();
         if (packet instanceof EntitySpawnS2CPacket) {
             var entity = world.getEntityById(((EntitySpawnS2CPacketAccessor) packet).getEntityId());
 
@@ -129,7 +130,22 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
         }
 
         Packet<?> spawnPacket;
-        var entry = new EntityTrackerEntry((ServerWorld) entity.getWorld(), entity, 1, true, (c) -> {}, (a, b) -> {});
+        var entry = new EntityTrackerEntry((ServerWorld) entity.getEntityWorld(), entity, 1, true, new EntityTrackerEntry.TrackerPacketSender() {
+            @Override
+            public void sendToListeners(Packet<? super ClientPlayPacketListener> packet) {
+
+            }
+
+            @Override
+            public void sendToSelfAndListeners(Packet<? super ClientPlayPacketListener> packet) {
+
+            }
+
+            @Override
+            public void sendToListenersIf(Packet<? super ClientPlayPacketListener> packet, Predicate<ServerPlayerEntity> predicate) {
+
+            }
+        });
         if(((EntityDisguise) this.player).hasTrueSight() || !disguise.isDisguised())
             spawnPacket = entity.createSpawnPacket(entry);
         else
@@ -140,7 +156,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
             add.accept(packet);
 
             if (!(entity instanceof PlayerEntity)) {
-                var playerRemovePacket = new PlayerRemoveS2CPacket(new ArrayList<>(Collections.singletonList(profile.getId())));
+                var playerRemovePacket = new PlayerRemoveS2CPacket(new ArrayList<>(Collections.singletonList(profile.id())));
                 this.disguiselib$q.add(playerRemovePacket);
                 this.disguiselib$qTimer = 50;
             }
@@ -155,10 +171,10 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
                         ((EntitySpawnS2CPacketAccessor) spawnPacket).setEntityId(disguiseEntity.getId());
                         ((EntitySpawnS2CPacketAccessor) spawnPacket).setUuid(disguiseEntity.getUuid());
                     }
-                    disguiseEntity.startRiding(this.player, true);
+                    disguiseEntity.startRiding(this.player, true, false);
                     add.accept((Packet<ClientPlayPacketListener>) spawnPacket);
 
-                    TeamS2CPacket joinTeamPacket = TeamS2CPacket.changePlayerTeam(DISGUISE_TEAM, this.player.getGameProfile().getName(), TeamS2CPacket.Operation.ADD); // join team
+                    TeamS2CPacket joinTeamPacket = TeamS2CPacket.changePlayerTeam(DISGUISE_TEAM, this.player.getGameProfile().name(), TeamS2CPacket.Operation.ADD); // join team
                     add.accept(joinTeamPacket);
                 }
             }
@@ -185,7 +201,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
     private void disguiselib$moveDisguiseEntity(PlayerMoveC2SPacket packet, CallbackInfo ci) {
         if(((EntityDisguise) this.player).isDisguised() && ((EntityDisguise) this.player).getDisguiseType() != EntityType.PLAYER) {
             // Moving disguise for the disguised player
-            EntityPositionS2CPacket s2CPacket = new EntityPositionS2CPacket(((EntityDisguise) this.player).getDisguiseEntity().getId(), new PlayerPosition(player.getSyncedPos(), Vec3d.ZERO, player.getYaw(), player.getPitch()), Set.of(), false);
+            EntityPositionS2CPacket s2CPacket = new EntityPositionS2CPacket(((EntityDisguise) this.player).getDisguiseEntity().getId(), new EntityPosition(player.getSyncedPos(), Vec3d.ZERO, player.getYaw(), player.getPitch()), Set.of(), false);
             EntitySetHeadYawS2CPacket headYawS2CPacket = new EntitySetHeadYawS2CPacket(this.player, (byte)((int)(this.player.getHeadYaw() * 256.0F / 360.0F)));
 
             //noinspection ConstantConditions
@@ -214,7 +230,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
 
             if (((EntityDisguise) this.player).isDisguised()) {
                 // Send join team packet to prevent "sliding"
-                TeamS2CPacket joinTeamPacket = TeamS2CPacket.changePlayerTeam(DISGUISE_TEAM, this.player.getGameProfile().getName(), TeamS2CPacket.Operation.ADD); // join team
+                TeamS2CPacket joinTeamPacket = TeamS2CPacket.changePlayerTeam(DISGUISE_TEAM, this.player.getGameProfile().name(), TeamS2CPacket.Operation.ADD); // join team
                 this.sendPacket(joinTeamPacket);
             }
         }
