@@ -38,15 +38,6 @@ public interface EntitySpawnS2CPacketAccessor {
     @Accessor("z")
     void setZ(double z);
     @Mutable
-    @Accessor("velocityX")
-    void setVelocityX(int velocityX);
-    @Mutable
-    @Accessor("velocityY")
-    void setVelocityY(int velocityY);
-    @Mutable
-    @Accessor("velocityZ")
-    void setVelocityZ(int velocityZ);
-    @Mutable
     @Accessor("yaw")
     void setYaw(byte yaw);
     @Mutable
