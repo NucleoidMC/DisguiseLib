@@ -67,27 +67,9 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
     )
     private void disguiseEntity(Packet<ClientPlayPacketListener> packet, PacketCallbacks callbacks, CallbackInfo ci) {
         if (!this.disguiselib$skipCheck) {
-            if (packet instanceof BundleS2CPacket bundleS2CPacket) {
-                if (bundleS2CPacket.getPackets() instanceof ArrayList<Packet<ClientPlayPacketListener>> list) {
-                    var list2 = new ArrayList<Packet<ClientPlayPacketListener>>();
-                    var adder = new ArrayList<Packet<ClientPlayPacketListener>>();
-                    var atomic = new AtomicBoolean(true);
-                    for (var packet2 : list) {
-                        atomic.set(true);
-                        adder.clear();
-                        this.disguiselib$transformPacket(packet2, () -> atomic.set(false), list2::add);
-
-                        if (atomic.get()) {
-                            list2.add(packet2);
-                        }
-
-                        list2.addAll(adder);
-                    }
-
-                    list.clear();
-                    list.addAll(list2);
-                }
-            } else {
+            // Skip bundle packets to avoid ConcurrentModificationException with Taterzen
+            // Bundle packets are complex and can cause issues when modified
+            if (!(packet instanceof BundleS2CPacket)) {
                 this.disguiselib$transformPacket(packet, ci::cancel, this::sendPacket);
             }
         }
@@ -159,7 +141,13 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser {
         }
 
         if(entity != null) {
-            disguiselib$sendFakePacket(entity, remove, add);
+            // Only send fake packet if the entity is actually disguised
+            if(entity instanceof EntityDisguise) {
+                EntityDisguise disguise = (EntityDisguise) entity;
+                if(disguise.isDisguised()) {
+                    disguiselib$sendFakePacket(entity, remove, add);
+                }
+            }
         }
     }
 
