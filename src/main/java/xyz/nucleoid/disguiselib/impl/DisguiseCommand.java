@@ -11,6 +11,8 @@ import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.NbtCompoundArgumentType;
 import net.minecraft.command.argument.RegistryEntryArgumentType;
 import net.minecraft.command.argument.RegistryEntryReferenceArgumentType;
+import net.minecraft.command.permission.Permission;
+import net.minecraft.command.permission.PermissionLevel;
 import net.minecraft.command.suggestion.SuggestionProviders;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -42,7 +44,7 @@ public class DisguiseCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess commandRegistryAccess, CommandManager.RegistrationEnvironment registrationEnvironment) {
         dispatcher.register(literal("disguise")
-                .requires(src -> src.hasPermissionLevel(2))
+                .requires(src -> src.getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS)))
                 .then(argument("target", entities())
                         .then(literal("as")
                             .then(argument("disguise", new RegistryEntryReferenceArgumentType<>(commandRegistryAccess, RegistryKeys.ENTITY_TYPE))
@@ -117,12 +119,12 @@ public class DisguiseCommand {
         // Minecraft doesn't allow "summoning" players, that's why we make an exception
         entities.forEach(entity -> {
             if(entity == src.getEntity()) {
-                if(src.hasPermissionLevel(2))
+                if(src.getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS)))
                     ((EntityDisguise) entity).removeDisguise();
                 else
                     src.sendError(NO_PERMISSION_ERROR);
             } else {
-                if(src.hasPermissionLevel(2)) {
+                if(src.getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS))) {
                     ((EntityDisguise) entity).removeDisguise();
                 } else
                     src.sendError(NO_PERMISSION_ERROR);
@@ -148,12 +150,12 @@ public class DisguiseCommand {
         NbtCompound finalNbt = nbt;
         entities.forEach(entity -> EntityType.loadEntityWithPassengers(finalNbt, ctx.getSource().getWorld(), SpawnReason.LOAD, (entityx) -> {
             if(entity == src.getEntity()) {
-                if(src.hasPermissionLevel(2))
+                if(src.getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS)))
                     ((EntityDisguise) entity).disguiseAs(entityx);
                 else
                     src.sendError(NO_PERMISSION_ERROR);
             } else {
-                if(src.hasPermissionLevel(2)) {
+                if(src.getPermissions().hasPermission(new Permission.Level(PermissionLevel.GAMEMASTERS))) {
                     ((EntityDisguise) entity).disguiseAs(entityx);
                 } else
                     src.sendError(NO_PERMISSION_ERROR);

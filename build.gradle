@@ -1,7 +1,7 @@
 plugins {
 	id "java"
 	id "maven-publish"
-	id 'fabric-loom' version '1.11.+'
+	id 'fabric-loom' version '1.13+'
 }
 apply plugin: 'fabric-loom'
 
@@ -11,7 +11,7 @@ targetCompatibility = JavaVersion.VERSION_21
 archivesBaseName = rootProject.archives_base_name
 version = rootProject.mod_version
 group = rootProject.maven_group
-
+version += "+" + rootProject.minecraft_version
 repositories {
 	maven {
 		url 'https://jitpack.io'
@@ -28,10 +28,10 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 processResources {
-	inputs.property "version", project.version
+	inputs.property "version", version
 
 	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+		expand "version": version
 	}
 }
 
