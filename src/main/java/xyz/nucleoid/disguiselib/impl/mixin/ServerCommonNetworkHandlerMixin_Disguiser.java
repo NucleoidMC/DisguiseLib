@@ -2,21 +2,12 @@ package xyz.nucleoid.disguiselib.impl.mixin;
 
 import com.mojang.authlib.GameProfile;
 import io.netty.channel.ChannelFutureListener;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.PacketCallbacks;
-import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.BrandCustomPayload;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.common.CustomPayloadC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.network.packet.s2c.play.*;
-import net.minecraft.server.network.ServerCommonNetworkHandler;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.world.World;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.custom.BrandPayload;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBundlePacket;
+import net.minecraft.server.network.ServerCommonPacketListenerImpl;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -35,10 +26,10 @@ import java.util.function.Consumer;
 
 import static xyz.nucleoid.disguiselib.impl.DisguiseLib.DISGUISE_TEAM;
 
-@Mixin(ServerCommonNetworkHandler.class)
+@Mixin(ServerCommonPacketListenerImpl.class)
 public abstract class ServerCommonNetworkHandlerMixin_Disguiser {
     @Shadow
-    public abstract void sendPacket(Packet<?> packet);
+    public abstract void send(Packet<?> packet);
 
     @Unique
     private boolean disguiselib$skipCheck;
@@ -54,22 +45,22 @@ public abstract class ServerCommonNetworkHandlerMixin_Disguiser {
      * @param packet packet being sent
      */
     @Inject(
-            method = "send",
+            method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/network/ClientConnection;send(Lnet/minecraft/network/packet/Packet;Lio/netty/channel/ChannelFutureListener;Z)V"
+                    target = "Lnet/minecraft/network/Connection;send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;Z)V"
             ),
             cancellable = true
     )
-    private void disguiseEntity(Packet<? super ClientPlayPacketListener> packet, ChannelFutureListener channelFutureListener, CallbackInfo ci) {
+    private void disguiseEntity(Packet<? super ClientGamePacketListener> packet, ChannelFutureListener channelFutureListener, CallbackInfo ci) {
         if (!this.disguiselib$skipCheck) {
             if (!(this instanceof ExtendedHandler self)) {
                 return;
             }
-            if (packet instanceof BundleS2CPacket bundleS2CPacket) {
-                if (bundleS2CPacket.getPackets() instanceof ArrayList<Packet<? super ClientPlayPacketListener>> list) {
-                    var list2 = new ArrayList<Packet<? super ClientPlayPacketListener>>();
-                    var adder = new ArrayList<Packet<? super ClientPlayPacketListener>>();
+            if (packet instanceof ClientboundBundlePacket bundleS2CPacket) {
+                if (bundleS2CPacket.subPackets() instanceof ArrayList<Packet<? super ClientGamePacketListener>> list) {
+                    var list2 = new ArrayList<Packet<? super ClientGamePacketListener>>();
+                    var adder = new ArrayList<Packet<? super ClientGamePacketListener>>();
                     var atomic = new AtomicBoolean(true);
                     for (var packet2 : list) {
                         atomic.set(true);
@@ -88,15 +79,15 @@ public abstract class ServerCommonNetworkHandlerMixin_Disguiser {
                 }
             } else {
                 this.disguiselib$skipCheck = true;
-                self.disguiselib$transformPacket(packet, ci::cancel, this::sendPacket);
+                self.disguiselib$transformPacket(packet, ci::cancel, this::send);
                 this.disguiselib$skipCheck = false;
             }
         }
     }
 
-    @Inject(method = "onCustomPayload", at = @At("TAIL"))
-    private void onClientBrand(CustomPayloadC2SPacket packet, CallbackInfo ci) {
-        if (packet.payload() instanceof BrandCustomPayload && this instanceof ExtendedHandler self) {
+    @Inject(method = "handleCustomPayload", at = @At("TAIL"))
+    private void onClientBrand(ServerboundCustomPayloadPacket packet, CallbackInfo ci) {
+        if (packet.payload() instanceof BrandPayload && this instanceof ExtendedHandler self) {
             self.disguiselib$onClientBrand();
         }
     }

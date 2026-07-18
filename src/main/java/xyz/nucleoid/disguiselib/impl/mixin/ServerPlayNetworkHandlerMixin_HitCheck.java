@@ -2,7 +2,7 @@ package xyz.nucleoid.disguiselib.impl.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(targets = "net.minecraft.server.network.ServerPlayNetworkHandler$1")
+@Mixin(targets = "net.minecraft.server.network.ServerGamePacketListenerImpl$1")
 public class ServerPlayNetworkHandlerMixin_HitCheck {
 
     /*@Inject(

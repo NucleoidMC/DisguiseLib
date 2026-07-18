@@ -1,11 +1,11 @@
 package xyz.nucleoid.disguiselib.impl.mixin.accessor;
 
 import it.unimi.dsi.fastutil.ints.IntList;
-import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(EntitiesDestroyS2CPacket.class)
+@Mixin(ClientboundRemoveEntitiesPacket.class)
 public interface EntitiesDestroyS2CPacketAccessor {
     @Accessor("entityIds")
     IntList getEntityIds();

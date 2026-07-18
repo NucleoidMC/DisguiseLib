@@ -1,6 +1,6 @@
 package xyz.nucleoid.disguiselib.api;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 
 /**
  * Internal methods for managing entity disguises.

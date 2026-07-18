@@ -1,27 +1,27 @@
 package xyz.nucleoid.disguiselib.impl.mixin.accessor;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.UUID;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.world.entity.EntityType;
 
-@Mixin(EntitySpawnS2CPacket.class)
+@Mixin(ClientboundAddEntityPacket.class)
 public interface EntitySpawnS2CPacketAccessor {
     @Mutable
-    @Accessor("entityType")
+    @Accessor("type")
     void setEntityType(EntityType<?> entityType);
     @Mutable
-    @Accessor("entityData")
+    @Accessor("data")
     void setEntityData(int entityData);
 
-    @Accessor("entityId")
+    @Accessor("id")
     int getEntityId();
 
     @Mutable
-    @Accessor("entityId")
+    @Accessor("id")
     void setEntityId(int id);
 
     @Mutable
@@ -38,12 +38,12 @@ public interface EntitySpawnS2CPacketAccessor {
     @Accessor("z")
     void setZ(double z);
     @Mutable
-    @Accessor("yaw")
+    @Accessor("yRot")
     void setYaw(byte yaw);
     @Mutable
-    @Accessor("pitch")
+    @Accessor("xRot")
     void setPitch(byte pitch);
     @Mutable
-    @Accessor("headYaw")
+    @Accessor("yHeadRot")
     void setHeadYaw(byte headYaw);
 }

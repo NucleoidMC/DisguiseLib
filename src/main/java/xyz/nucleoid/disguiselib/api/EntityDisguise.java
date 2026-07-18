@@ -1,8 +1,8 @@
 package xyz.nucleoid.disguiselib.api;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 
 /**
  * Util for disguising entities.

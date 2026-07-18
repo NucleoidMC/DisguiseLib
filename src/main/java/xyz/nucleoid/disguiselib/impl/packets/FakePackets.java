@@ -1,8 +1,8 @@
 package xyz.nucleoid.disguiselib.impl.packets;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.server.network.EntityTrackerEntry;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.server.level.ServerEntity;
+import net.minecraft.world.entity.Entity;
 import xyz.nucleoid.disguiselib.api.EntityDisguise;
 
 public class FakePackets {
@@ -15,7 +15,7 @@ public class FakePackets {
      * @param b
      * @return fake entity spawn packet (Either player)
      */
-    public static Packet<?> universalSpawnPacket(Entity entity, EntityTrackerEntry entry, boolean replace) {
+    public static Packet<?> universalSpawnPacket(Entity entity, ServerEntity entry, boolean replace) {
         // fixme - disguising non-living kicks you (just upon disguise)
         Entity disguise = ((EntityDisguise) entity).getDisguiseEntity();
         if(disguise == null) {
@@ -25,18 +25,18 @@ public class FakePackets {
         try {
             if (replace) {
                 var x = disguise.getId();
-                var y = disguise.getUuid();
+                var y = disguise.getUUID();
                 disguise.setId(entity.getId());
-                disguise.setUuid(entity.getUuid());
-                Packet<?> packet = disguise.createSpawnPacket(entry);
+                disguise.setUUID(entity.getUUID());
+                Packet<?> packet = disguise.getAddEntityPacket(entry);
                 disguise.setId(x);
-                disguise.setUuid(y);
+                disguise.setUUID(y);
                 return packet;
             } else {
-                return disguise.createSpawnPacket(entry);
+                return disguise.getAddEntityPacket(entry);
             }
         } catch (Throwable e) {
-            return entity.createSpawnPacket(entry);
+            return entity.getAddEntityPacket(entry);
         }
     }
 }

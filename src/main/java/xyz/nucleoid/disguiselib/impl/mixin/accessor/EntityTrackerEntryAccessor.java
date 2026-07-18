@@ -1,16 +1,16 @@
 package xyz.nucleoid.disguiselib.impl.mixin.accessor;
 
-import net.minecraft.server.network.EntityTrackerEntry;
-import net.minecraft.server.network.PlayerAssociatedNetworkHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Set;
+import net.minecraft.server.level.ServerEntity;
+import net.minecraft.server.network.ServerPlayerConnection;
 
-@Mixin(targets = "net.minecraft.server.world.ServerChunkLoadingManager$EntityTracker")
+@Mixin(targets = "net.minecraft.server.level.ChunkMap$TrackedEntity")
 public interface EntityTrackerEntryAccessor {
-    @Accessor("entry")
-    EntityTrackerEntry getEntry();
-    @Accessor("listeners")
-    Set<PlayerAssociatedNetworkHandler> getListeners();
+    @Accessor("serverEntity")
+    ServerEntity getEntry();
+    @Accessor("seenBy")
+    Set<ServerPlayerConnection> getListeners();
 }
