@@ -21,10 +21,7 @@ import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.*;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypes;
-import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -142,7 +139,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
         }
 
         Packet<?> spawnPacket;
-        var entry = new ServerEntity((ServerLevel) entity.level(), entity, 1, true, new ServerEntity.Synchronizer() {
+        var entry = new ServerEntity((ServerLevel) entity.level(), entity, UpdateInterval.NEVER, true, new ServerEntity.Synchronizer() {
             @Override
             public void sendToTrackingPlayers(Packet<? super ClientGamePacketListener> packet) {
 
