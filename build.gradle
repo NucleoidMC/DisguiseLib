@@ -8,7 +8,7 @@ base {
 }
 version = rootProject.mod_version
 group = rootProject.maven_group
-
+version += "+" + rootProject.minecraft_version
 repositories {
 	maven {
 		url 'https://jitpack.io'
@@ -25,10 +25,10 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 processResources {
-	inputs.property "version", project.version
+	inputs.property "version", version
 
 	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+		expand "version": version
 	}
 }
 
