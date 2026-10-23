@@ -8,34 +8,18 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
-import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
-import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
-import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket;
-import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
-import net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket;
-import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
-import net.minecraft.network.protocol.game.ClientboundUpdateMobEffectPacket;
+import net.minecraft.network.protocol.game.*;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -47,18 +31,17 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import xyz.nucleoid.disguiselib.api.DisguiseUtils;
 import xyz.nucleoid.disguiselib.api.EntityDisguise;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.EntityTrackerEntryAccessor;
+import xyz.nucleoid.disguiselib.impl.mixin.accessor.MannequinAccessor;
 import xyz.nucleoid.disguiselib.impl.mixin.accessor.ServerChunkLoadingManagerAccessor;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static net.minecraft.world.entity.EntityTypes.PLAYER;
 import static net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER;
-import static xyz.nucleoid.disguiselib.impl.DisguiseLib.DISGUISE_TEAM;
+import static net.minecraft.world.entity.EntityTypes.PLAYER;
 import static xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerEntityAccessor.getPLAYER_MODEL_PARTS;
 
 @Mixin(Entity.class)
@@ -100,15 +83,20 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     @Shadow
     public abstract boolean isCustomNameVisible();
 
-    @Shadow public abstract boolean isSprinting();
+    @Shadow
+    public abstract boolean isSprinting();
 
-    @Shadow public abstract boolean isShiftKeyDown();
+    @Shadow
+    public abstract boolean isShiftKeyDown();
 
-    @Shadow public abstract boolean isSwimming();
+    @Shadow
+    public abstract boolean isSwimming();
 
-    @Shadow public abstract boolean isCurrentlyGlowing();
+    @Shadow
+    public abstract boolean isCurrentlyGlowing();
 
-    @Shadow public abstract boolean isSilent();
+    @Shadow
+    public abstract boolean isSilent();
 
     @Shadow
     private int id;
@@ -126,9 +114,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     public abstract Component getDisplayName();
 
     @Shadow
-    protected abstract void addPassenger(Entity passenger);
-
-    @Shadow private boolean onGround;
+    private boolean onGround;
 
     /**
      * Tells you the disguised status.
@@ -149,26 +135,15 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     public void disguiseAs(EntityType<?> entityType) {
         this.disguiselib$disguiseType = entityType;
 
-        PlayerList manager = this.level.getServer().getPlayerList();
 
-        if(this.disguiselib$disguiseEntity != null && this.disguiselib$disguiseEntity.getType() != entityType && this.disguiselib$entity instanceof ServerPlayer) {
-            this.disguiselib$hideSelfView();
-        }
-
-        if(entityType == PLAYER) {
-            if(this.disguiselib$profile == null)
-                this.setGameProfile(new GameProfile(this.uuid, this.getDisplayName().getString()));
+        if (entityType == PLAYER) {
+            if (this.disguiselib$profile == null)
+                this.disguiseLib$setGameProfile(new GameProfile(this.uuid, this.getDisplayName().getString()));
             this.disguiselib$constructFakePlayer(this.disguiselib$profile);
         } else {
             // Why null check? Well, if entity was disguised via EntityDisguise#disguiseAs(Entity), this field is already set
             if (this.disguiselib$disguiseEntity == null || this.disguiselib$disguiseEntity.getType() != entityType)
                 this.disguiselib$disguiseEntity = entityType.create(level, EntitySpawnReason.LOAD);
-
-            if (this.disguiselib$profile != null) {
-                // Previous type was player, we have to send a player remove packet
-                ClientboundPlayerInfoRemovePacket listPacket = new ClientboundPlayerInfoRemovePacket(new ArrayList(Collections.singletonList(this.disguiselib$profile.id())));
-                manager.broadcastAll(listPacket);
-            }
 
             // We don't need gameprofile anymore
             this.disguiselib$profile = null;
@@ -176,13 +151,8 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
 
 
         // Fix some client predictions
-        if(this.disguiselib$disguiseEntity instanceof Mob)
+        if (this.disguiselib$disguiseEntity instanceof Mob)
             ((Mob) this.disguiselib$disguiseEntity).setNoAi(true);
-
-        ResourceKey<Level> worldRegistryKey = this.level.dimension();
-
-        // Minor datatracker thingies
-        this.updateTrackedData();
 
         //noinspection ReferenceToMixin
         var tracker = ((ServerChunkLoadingManagerAccessor) ((ServerLevel) this.level).getChunkSource().chunkMap).getEntityTrackers().get(this.getId());
@@ -200,15 +170,9 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Override
     public void disguiseAs(Entity entity) {
-        if(this.disguiselib$disguiseEntity != null && this.disguiselib$entity instanceof ServerPlayer) {
-            // Removing previous disguise if this is player
-            // (we have it saved under a separate id)
-            this.disguiselib$hideSelfView();
-        }
-
         this.disguiselib$disguiseEntity = entity;
-        if(entity instanceof Player) {
-            this.setGameProfile(((Player) entity).getGameProfile());
+        if (entity instanceof Player) {
+            this.disguiseLib$setGameProfile(((Player) entity).getGameProfile());
         }
         this.disguiseAs(entity.getType());
     }
@@ -217,20 +181,16 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * Clears the disguise - sets the {@link EntityMixin_Disguise#disguiselib$disguiseType} back to original.
      */
     @Override
-    public void removeDisguise() {
-        if(this.disguiselib$disguiseEntity != null && this.disguiselib$entity instanceof ServerPlayer) {
-            // Removing previous disguise if this is player
-            // (we have it saved under a separate id)
-            this.disguiselib$hideSelfView();
-        }
-        // Disguising entity as itself
-        this.disguiselib$disguiseEntity = this.disguiselib$entity;
-        this.disguiselib$disguiseType = this.getType();
-
-        this.disguiseAs(this.getType());
-
-        // Setting as not-disguised
+    public void disguiseLib$removeDisguise() {
         this.disguiselib$disguiseEntity = null;
+        this.disguiselib$disguiseType = null;
+
+        var tracker = ((ServerChunkLoadingManagerAccessor) ((ServerLevel) this.level).getChunkSource().chunkMap).getEntityTrackers().get(this.getId());
+
+        for (var listener : tracker.getListeners()) {
+            tracker.getEntry().removePairing(listener.getPlayer());
+            tracker.getEntry().addPairing(listener.getPlayer());
+        }
     }
 
     /**
@@ -239,7 +199,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @return disguise entity type or real type if there's no disguise
      */
     @Override
-    public EntityType<?> getDisguiseType() {
+    public EntityType<?> disguiseLib$getDisguiseType() {
         return this.disguiselib$disguiseType;
     }
 
@@ -250,7 +210,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Nullable
     @Override
-    public Entity getDisguiseEntity() {
+    public Entity disguiseLib$getDisguiseEntity() {
         return this.disguiselib$disguiseEntity;
     }
 
@@ -260,7 +220,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @return true if the disguise type is an instance of {@link LivingEntity}, otherwise false.
      */
     @Override
-    public boolean disguiseAlive() {
+    public boolean disguiseLib$disguiseAlive() {
         return this.disguiselib$disguiseEntity instanceof LivingEntity;
     }
 
@@ -272,7 +232,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @return if entity can be "fooled" by disguise
      */
     @Override
-    public boolean hasTrueSight() {
+    public boolean disguiseLib$hasTrueSight() {
         return this.disguiselib$trueSight;
     }
 
@@ -284,7 +244,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @param trueSight if entity should not see disguises
      */
     @Override
-    public void setTrueSight(boolean trueSight) {
+    public void disguiseLib$setTrueSight(boolean trueSight) {
         this.disguiselib$trueSight = trueSight;
     }
 
@@ -295,7 +255,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @return GameProfile of the entity.
      */
     @Override
-    public @Nullable GameProfile getGameProfile() {
+    public @Nullable GameProfile disguiseLib$getGameProfile() {
         return this.disguiselib$profile;
     }
 
@@ -305,36 +265,22 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @param gameProfile a new profile for the entity.
      */
     @Override
-    public void setGameProfile(@Nullable GameProfile gameProfile) {
+    public void disguiseLib$setGameProfile(@Nullable GameProfile gameProfile) {
         this.disguiselib$profile = gameProfile;
-        if(gameProfile != null) {
+        if (gameProfile != null) {
             String name = gameProfile.name();
-            if(name.length() > 16) {
+            if (name.length() > 16) {
                 // Minecraft kicks players on such profile name received
                 name = name.substring(0, 16);
                 PropertyMap properties = gameProfile.properties();
                 this.disguiselib$profile = new GameProfile(gameProfile.id(), name);
                 Collection<Property> textures = properties.get("textures");
-                if(!textures.isEmpty())
+                if (!textures.isEmpty())
                     this.disguiselib$profile.properties().put("textures", textures.stream().findFirst().get());
             }
         }
 
         this.disguiselib$sendProfileUpdates();
-    }
-
-    /**
-     * Hides player's self-disguise-entity
-     */
-    @Unique
-    private void disguiselib$hideSelfView() {
-        // Removing previous disguise if this is player
-        // (we have it saved under a separate id)
-        ServerPlayer player = (ServerPlayer) this.disguiselib$entity;
-        player.connection.send(new ClientboundRemoveEntitiesPacket(this.disguiselib$disguiseEntity.getId()));
-
-        ClientboundSetPlayerTeamPacket removeTeamPacket = ClientboundSetPlayerTeamPacket.createPlayerPacket(DISGUISE_TEAM, player.getGameProfile().name(), ClientboundSetPlayerTeamPacket.Action.REMOVE);
-        player.connection.send(removeTeamPacket);
     }
 
     /**
@@ -345,7 +291,9 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Unique
     private void disguiselib$constructFakePlayer(@NotNull GameProfile profile) {
-        this.disguiselib$disguiseEntity = new ServerPlayer(level.getServer(), (ServerLevel) level, profile, ClientInformation.createDefault());
+        var mannequin = EntityTypes.MANNEQUIN.create(this.level, EntitySpawnReason.SPAWN_ITEM_USE);
+        ((MannequinAccessor) mannequin).callSetProfile(ResolvableProfile.createResolved(profile));
+        this.disguiselib$disguiseEntity = mannequin;
         this.disguiselib$disguiseEntity.getEntityData().set(getPLAYER_MODEL_PARTS(), (byte) 0x7f);
     }
 
@@ -357,7 +305,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Unique
     private List<Pair<EquipmentSlot, ItemStack>> disguiselib$getEquipment() {
-        if(disguiselib$entity instanceof LivingEntity)
+        if (disguiselib$entity instanceof LivingEntity)
             return Arrays.stream(EquipmentSlot.values()).map(slot -> new Pair<>(slot, ((LivingEntity) disguiselib$entity).getItemBySlot(slot))).collect(Collectors.toList());
         return Collections.emptyList();
     }
@@ -367,17 +315,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      */
     @Unique
     private void disguiselib$sendProfileUpdates() {
-        ClientboundPlayerInfoRemovePacket packet = new ClientboundPlayerInfoRemovePacket(new ArrayList(Collections.singletonList(this.disguiselib$profile.id())));
-
         PlayerList playerManager = this.level.getServer().getPlayerList();
-        playerManager.broadcastAll(packet);
-
-        ClientboundPlayerInfoUpdatePacket addPacket = new ClientboundPlayerInfoUpdatePacket(ADD_PLAYER, (ServerPlayer) this.disguiselib$disguiseEntity);
-        /*((PlayerListS2CPacketAccessor) addPacket).getEntries().forEach(entry -> {
-
-        });*/
-        playerManager.broadcastAll(addPacket);
-
         ServerChunkCache manager = (ServerChunkCache) this.level.getChunkSource();
         var storage = manager.chunkMap;
         EntityTrackerEntryAccessor trackerEntry = ((ServerChunkLoadingManagerAccessor) storage).getEntityTrackers().get(this.getId());
@@ -385,8 +323,8 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             trackerEntry.getListeners().forEach(tracking -> trackerEntry.getEntry().addPairing(tracking.getPlayer()));
 
         // Changing entity on client
-        if (this.disguiselib$entity instanceof ServerPlayer player) {
-            ServerLevel targetWorld = (ServerLevel) player.level();
+        if (((Object) this) instanceof ServerPlayer player) {
+            ServerLevel targetWorld = player.level();
 
             player.connection.send(new ClientboundRespawnPacket(player.createCommonSpawnInfo(targetWorld), ClientboundRespawnPacket.KEEP_ALL_DATA));
             player.connection.teleport(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
@@ -440,8 +378,8 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     private void postTick(CallbackInfo ci) {
         // Fixes #2, also makes non-living entities update their pos
         // more than once per second -> movement isn't as "blocky"
-        if(this.isDisguised()) {
-            if(this.level.getServer() != null && !(this.disguiselib$disguiseEntity instanceof LivingEntity) && !(this.disguiselib$entity instanceof Player))
+        if (this.isDisguised()) {
+            if (this.level.getServer() != null && !(this.disguiselib$disguiseEntity instanceof LivingEntity) && !(this.disguiselib$entity instanceof Player))
                 this.level.getServer().getPlayerList().broadcastAll(
                         new ClientboundTeleportEntityPacket(
                                 this.disguiselib$entity.getId(),
@@ -451,7 +389,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
                                         this.disguiselib$entity.getYRot(),
                                         this.disguiselib$entity.getXRot()
                                 ), Set.of(), this.onGround), this.level.dimension());
-            else if(this.disguiselib$entity instanceof ServerPlayer && ++this.disguiselib$ticks % 40 == 0 && this.disguiselib$disguiseEntity != null) {
+            else if (this.disguiselib$entity instanceof ServerPlayer && ++this.disguiselib$ticks % 40 == 0 && this.disguiselib$disguiseEntity != null) {
                 // "Disguised as" message
                 MutableComponent msg = Component.literal("You are disguised as ")
                         .append(Component.translatable(this.disguiselib$disguiseEntity.getType().getDescriptionId()))
@@ -462,24 +400,6 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             }
         }
 
-    }
-
-    /**
-     * If entity is disguised as player, we need to send a player
-     * remove packet on death as well, otherwise tablist still contains
-     * it.
-     */
-    @Inject(
-            method = "discard()V",
-            at = @At("TAIL")
-    )
-    private void onRemove(CallbackInfo ci) {
-        if(this.isDisguised() && this.disguiselib$profile != null) {
-            // If entity was killed, we should also send a remove player action packet
-            ClientboundPlayerInfoRemovePacket packet = new ClientboundPlayerInfoRemovePacket(new ArrayList<>(Collections.singletonList(this.disguiselib$profile.id())));
-            PlayerList manager = this.level.getServer().getPlayerList();
-            manager.broadcastAll(packet);
-        }
     }
 
     /**
@@ -494,16 +414,16 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     private void fromTag(ValueInput tag, CallbackInfo ci) {
         var disguiseTag = tag.child("DisguiseLib");
 
-        if(disguiseTag.isPresent()) {
+        if (disguiseTag.isPresent()) {
             Identifier disguiseTypeId = Identifier.tryParse(disguiseTag.get().getStringOr("DisguiseType", ""));
             this.disguiselib$disguiseType = BuiltInRegistries.ENTITY_TYPE.getValue(disguiseTypeId);
 
-            if(this.disguiselib$disguiseType == PLAYER) {
-                this.setGameProfile(new GameProfile(this.uuid, this.getName().getString()));
+            if (this.disguiselib$disguiseType == PLAYER) {
+                this.disguiseLib$setGameProfile(new GameProfile(this.uuid, this.getName().getString()));
                 this.disguiselib$constructFakePlayer(this.disguiselib$profile);
             } else {
                 var disguiseEntityTag = disguiseTag.get().child("DisguiseEntity");
-                if(disguiseEntityTag.isPresent())
+                if (disguiseEntityTag.isPresent())
                     this.disguiselib$disguiseEntity = EntityType.loadEntityRecursive(disguiseEntityTag.get(), this.level, EntitySpawnReason.LOAD, (entityx) -> entityx);
             }
         }
@@ -519,17 +439,17 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             at = @At("TAIL")
     )
     private void toTag(ValueOutput tag, CallbackInfo ci) {
-        if(this.isDisguised()) {
+        if (this.isDisguised()) {
             var disguiseTag = tag.child("DisguiseLib");
 
             disguiseTag.putString("DisguiseType", BuiltInRegistries.ENTITY_TYPE.getKey(this.disguiselib$disguiseType).toString());
 
-            if(this.disguiselib$disguiseEntity != null && !this.disguiselib$entity.equals(this.disguiselib$disguiseEntity)) {
+            if (this.disguiselib$disguiseEntity != null && !this.disguiselib$entity.equals(this.disguiselib$disguiseEntity)) {
                 var disguiseEntityTag = disguiseTag.child("DisguiseEntity");
                 this.disguiselib$disguiseEntity.saveWithoutId(disguiseEntityTag);
 
                 Identifier identifier = BuiltInRegistries.ENTITY_TYPE.getKey(this.disguiselib$disguiseEntity.getType());
-                disguiseEntityTag.putString("id", identifier.toString());;
+                disguiseEntityTag.putString("id", identifier.toString());
             }
         }
     }

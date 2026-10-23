@@ -19,5 +19,5 @@ public interface DisguiseUtils {
      *
      * @return true whether the disguise type is an instance of {@link LivingEntity}, otherwise false.
      */
-    boolean disguiseAlive();
+    boolean disguiseLib$disguiseAlive();
 }

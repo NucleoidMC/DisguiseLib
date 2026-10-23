@@ -17,7 +17,7 @@ public class FakePackets {
      */
     public static Packet<?> universalSpawnPacket(Entity entity, ServerEntity entry, boolean replace) {
         // fixme - disguising non-living kicks you (just upon disguise)
-        Entity disguise = ((EntityDisguise) entity).getDisguiseEntity();
+        Entity disguise = ((EntityDisguise) entity).disguiseLib$getDisguiseEntity();
         if(disguise == null) {
             disguise = entity;
         }

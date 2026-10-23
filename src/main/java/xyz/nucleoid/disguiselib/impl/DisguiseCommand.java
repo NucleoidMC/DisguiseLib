@@ -29,7 +29,6 @@ import net.minecraft.world.entity.EntityType;
 import static com.mojang.brigadier.arguments.StringArgumentType.word;
 import static net.minecraft.commands.arguments.EntityArgument.entities;
 import static net.minecraft.commands.synchronization.SuggestionProviders.SUMMONABLE_ENTITIES;
-import static net.minecraft.world.entity.EntityTypes.PLAYER;
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
@@ -115,12 +114,12 @@ public class DisguiseCommand {
         entities.forEach(entity -> {
             if(entity == src.getEntity()) {
                 if(Commands.LEVEL_GAMEMASTERS.check(src.permissions()))
-                    ((EntityDisguise) entity).removeDisguise();
+                    ((EntityDisguise) entity).disguiseLib$removeDisguise();
                 else
                     src.sendFailure(NO_PERMISSION_ERROR);
             } else {
                 if(Commands.LEVEL_GAMEMASTERS.check(src.permissions())) {
-                    ((EntityDisguise) entity).removeDisguise();
+                    ((EntityDisguise) entity).disguiseLib$removeDisguise();
                 } else
                     src.sendFailure(NO_PERMISSION_ERROR);
             }

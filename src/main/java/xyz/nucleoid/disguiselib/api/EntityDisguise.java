@@ -33,21 +33,21 @@ public interface EntityDisguise {
     /**
      * Clears the disguise - sets the disguiseType back to original.
      */
-    void removeDisguise();
+    void disguiseLib$removeDisguise();
 
     /**
      * Gets the disguise entity type
      *
      * @return disguise entity type or real type if there's no disguise
      */
-    EntityType<?> getDisguiseType();
+    EntityType<?> disguiseLib$getDisguiseType();
 
     /**
      * Gets the disguise entity.
      *
      * @return disguise entity or null if there's no disguise
      */
-    Entity getDisguiseEntity();
+    Entity disguiseLib$getDisguiseEntity();
 
     /**
      * Whether this entity can bypass the
@@ -56,7 +56,7 @@ public interface EntityDisguise {
      *
      * @return if entity can be "fooled" by disguise
      */
-    boolean hasTrueSight();
+    boolean disguiseLib$hasTrueSight();
 
     /**
      * Toggles true sight - whether entity
@@ -65,7 +65,7 @@ public interface EntityDisguise {
      *
      * @param trueSight if entity should not see disguises
      */
-    void setTrueSight(boolean trueSight);
+    void disguiseLib$setTrueSight(boolean trueSight);
 
     /**
      * Gets the {@link GameProfile} for disguised entity,
@@ -73,12 +73,12 @@ public interface EntityDisguise {
      *
      * @return GameProfile of the entity if set, otherwise null.
      */
-    GameProfile getGameProfile();
+    GameProfile disguiseLib$getGameProfile();
 
     /**
      * Sets the GameProfile.
      *
      * @param gameProfile a new profile for the entity.
      */
-    void setGameProfile(GameProfile gameProfile);
+    void disguiseLib$setGameProfile(GameProfile gameProfile);
 }

@@ -8,6 +8,7 @@
     "ServerCommonNetworkHandlerMixin_Disguiser",
     "ServerPlayNetworkHandlerMixin_Disguiser",
     "ServerPlayNetworkHandlerMixin_HitCheck",
+    "V1460Mixin",
     "accessor.EntitiesDestroyS2CPacketAccessor",
     "accessor.EntityAccessor",
     "accessor.EntityAttributesS2CPacketAccessor",
@@ -15,6 +16,7 @@
     "accessor.EntitySpawnS2CPacketAccessor",
     "accessor.EntityTrackerEntryAccessor",
     "accessor.EntityTrackerUpdateS2CPacketAccessor",
+    "accessor.MannequinAccessor",
     "accessor.PlayerEntityAccessor",
     "accessor.PlayerListS2CPacketAccessor",
     "accessor.ServerChunkLoadingManagerAccessor"
