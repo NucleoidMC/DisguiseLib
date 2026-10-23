@@ -85,7 +85,7 @@ public class DisguiseCommand {
             entities.forEach(entity -> {
                 if(entity == src.getEntity()) {
                     if(src.hasPermissionLevel(2)) {
-                        ((EntityDisguise) entity).disguiseAs(PLAYER);
+                        ((EntityDisguise) entity).disguiseLib$disguiseAs(PLAYER);
                         if(finalProfile != null) {
                             ((EntityDisguise) entity).setGameProfile(finalProfile);
                         }
@@ -94,7 +94,7 @@ public class DisguiseCommand {
                         src.sendError(NO_PERMISSION_ERROR);
                 } else {
                     if(src.hasPermissionLevel(2)) {
-                        ((EntityDisguise) entity).disguiseAs(PLAYER);
+                        ((EntityDisguise) entity).disguiseLib$disguiseAs(PLAYER);
                         if(finalProfile != null) {
                             ((EntityDisguise) entity).setGameProfile(finalProfile);
                         }
@@ -145,12 +145,12 @@ public class DisguiseCommand {
         entities.forEach(entity -> EntityType.loadEntityRecursive(finalNbt, ctx.getSource().getLevel(), new EntitySpawnRequest(EntitySpawnReason.LOAD, true), (entityx) -> {
             if(entity == src.getEntity()) {
                 if(Commands.LEVEL_GAMEMASTERS.check(src.permissions()))
-                    ((EntityDisguise) entity).disguiseAs(entityx);
+                    ((EntityDisguise) entity).disguiseLib$disguiseAs(entityx);
                 else
                     src.sendFailure(NO_PERMISSION_ERROR);
             } else {
                 if(Commands.LEVEL_GAMEMASTERS.check(src.permissions())) {
-                    ((EntityDisguise) entity).disguiseAs(entityx);
+                    ((EntityDisguise) entity).disguiseLib$disguiseAs(entityx);
                 } else
                     src.sendFailure(NO_PERMISSION_ERROR);
             }

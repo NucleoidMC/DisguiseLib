@@ -72,7 +72,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
         } else if(packet instanceof ClientboundSetEntityDataPacket) {
             // an ugly fix for #6
             int entityId = ((EntityTrackerUpdateS2CPacketAccessor) packet).getEntityId();
-            if(entityId == this.player.getId() && ((EntityDisguise) this.player).isDisguised()) {
+            if(entityId == this.player.getId() && ((EntityDisguise) this.player).disguiseLib$isDisguised()) {
                 List<SynchedEntityData.DataValue<?>> trackedValues = this.player.getEntityData().getNonDefaultValues();
                 if(((EntityDisguise) this.player).disguiseLib$getDisguiseType() != EntityTypes.PLAYER) {
                     Byte flags = this.player.getEntityData().get(EntityAccessor.getFLAGS());
@@ -90,7 +90,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
                 Entity original = world.getEntity(entityId);
 
                 // Only change the content if entity is disguised
-                if(original != null && ((EntityDisguise) original).isDisguised()) {
+                if(original != null && ((EntityDisguise) original).disguiseLib$isDisguised()) {
                     Entity disguised = ((EntityDisguise) original).disguiseLib$getDisguiseEntity();
                     if(disguised != null) {
                         ((DisguiseUtils) original).updateTrackedData();
@@ -107,7 +107,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
             Entity original = world.getEntity(((EntityAttributesS2CPacketAccessor) packet).getEntityId());
             EntityDisguise entityDisguise = (EntityDisguise) original;
 
-            if(original != null && entityDisguise.isDisguised() && !((DisguiseUtils) original).disguiseLib$disguiseAlive()) {
+            if(original != null && entityDisguise.disguiseLib$isDisguised() && !((DisguiseUtils) original).disguiseLib$disguiseAlive()) {
                 remove.run();
                 return;
             }
@@ -116,7 +116,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
             if(id != this.player.getId()) {
 
                 Entity entity1 = world.getEntity(id);
-                if(entity1 != null && ((EntityDisguise) entity1).isDisguised()) {
+                if(entity1 != null && ((EntityDisguise) entity1).disguiseLib$isDisguised()) {
                     // Cancels some client predictions
                     remove.run();
                 }
@@ -155,7 +155,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
 
             }
         });
-        if(((EntityDisguise) this.player).disguiseLib$hasTrueSight() || !disguise.isDisguised())
+        if(((EntityDisguise) this.player).disguiseLib$hasTrueSight() || !disguise.disguiseLib$isDisguised())
             spawnPacket = entity.getAddEntityPacket(entry);
         else
             spawnPacket = FakePackets.universalSpawnPacket(entity, entry, entity.getId() != this.player.getId());
@@ -174,7 +174,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
             // We must treat disguised player differently
             // Why, I hear you ask ..?
             // Well, sending spawn packet of the new entity makes the player not being able to move :(
-            if (disguise.disguiseLib$getDisguiseType() != EntityTypes.PLAYER && disguise.isDisguised()) {
+            if (disguise.disguiseLib$getDisguiseType() != EntityTypes.PLAYER && disguise.disguiseLib$isDisguised()) {
                 if (disguiseEntity != null) {
                     if (spawnPacket instanceof ClientboundAddEntityPacket) {
                         ((EntitySpawnS2CPacketAccessor) spawnPacket).setEntityId(disguiseEntity.getId());
@@ -188,7 +188,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
                 }
             }
             remove.run();
-        } else if(disguise.isDisguised()) {
+        } else if(disguise.disguiseLib$isDisguised()) {
             //this.player.getX()
             //ArmorStandEntity fakeStand = new ArmorStandEntity(this.player.world, );
             //fakeStand.startRiding(fakeStand, true);
@@ -208,7 +208,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
         )
     )
     private void disguiselib$moveDisguiseEntity(ServerboundMovePlayerPacket packet, CallbackInfo ci) {
-        if(((EntityDisguise) this.player).isDisguised() && ((EntityDisguise) this.player).disguiseLib$getDisguiseType() != EntityTypes.PLAYER) {
+        if(((EntityDisguise) this.player).disguiseLib$isDisguised() && ((EntityDisguise) this.player).disguiseLib$getDisguiseType() != EntityTypes.PLAYER) {
             // Moving disguise for the disguised player
             ClientboundTeleportEntityPacket s2CPacket = new ClientboundTeleportEntityPacket(((EntityDisguise) this.player).disguiseLib$getDisguiseEntity().getId(), new PositionMoveRotation(player.trackingPosition(), Vec3.ZERO, player.getYRot(), player.getXRot()), Set.of(), false);
             ClientboundRotateHeadPacket headYawS2CPacket = new ClientboundRotateHeadPacket(this.player, (byte)((int)(this.player.getYHeadRot() * 256.0F / 360.0F)));
@@ -237,7 +237,7 @@ public abstract class ServerPlayNetworkHandlerMixin_Disguiser extends ServerComm
             this.disguiselib$sentTeamPacket = true;
             this.send(addTeamPacket);
 
-            if (((EntityDisguise) this.player).isDisguised()) {
+            if (((EntityDisguise) this.player).disguiseLib$isDisguised()) {
                 // Send join team packet to prevent "sliding"
                 ClientboundSetPlayerTeamPacket joinTeamPacket = ClientboundSetPlayerTeamPacket.createPlayerPacket(DISGUISE_TEAM, this.player.getGameProfile().name(), ClientboundSetPlayerTeamPacket.Action.ADD); // join team
                 this.send(joinTeamPacket);

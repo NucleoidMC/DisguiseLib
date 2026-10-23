@@ -40,7 +40,6 @@ import xyz.nucleoid.disguiselib.impl.mixin.accessor.ServerChunkLoadingManagerAcc
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER;
 import static net.minecraft.world.entity.EntityTypes.PLAYER;
 import static xyz.nucleoid.disguiselib.impl.mixin.accessor.PlayerEntityAccessor.getPLAYER_MODEL_PARTS;
 
@@ -122,7 +121,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @return true if entity is disguised, otherwise false.
      */
     @Override
-    public boolean isDisguised() {
+    public boolean disguiseLib$isDisguised() {
         return this.disguiselib$disguiseEntity != null;
     }
 
@@ -132,7 +131,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @param entityType the type to disguise this entity into
      */
     @Override
-    public void disguiseAs(EntityType<?> entityType) {
+    public void disguiseLib$disguiseAs(EntityType<?> entityType) {
         this.disguiselib$disguiseType = entityType;
 
 
@@ -141,7 +140,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
                 this.disguiseLib$setGameProfile(new GameProfile(this.uuid, this.getDisplayName().getString()));
             this.disguiselib$constructFakePlayer(this.disguiselib$profile);
         } else {
-            // Why null check? Well, if entity was disguised via EntityDisguise#disguiseAs(Entity), this field is already set
+            // Why null check? Well, if entity was disguised via EntityDisguise#disguiseLib$disguiseAs(Entity), this field is already set
             if (this.disguiselib$disguiseEntity == null || this.disguiselib$disguiseEntity.getType() != entityType)
                 this.disguiselib$disguiseEntity = entityType.create(level, EntitySpawnReason.LOAD);
 
@@ -169,12 +168,12 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
      * @param entity the entity to disguise into
      */
     @Override
-    public void disguiseAs(Entity entity) {
+    public void disguiseLib$disguiseAs(Entity entity) {
         this.disguiselib$disguiseEntity = entity;
         if (entity instanceof Player) {
             this.disguiseLib$setGameProfile(((Player) entity).getGameProfile());
         }
-        this.disguiseAs(entity.getType());
+        this.disguiseLib$disguiseAs(entity.getType());
     }
 
     /**
@@ -378,7 +377,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
     private void postTick(CallbackInfo ci) {
         // Fixes #2, also makes non-living entities update their pos
         // more than once per second -> movement isn't as "blocky"
-        if (this.isDisguised()) {
+        if (this.disguiseLib$isDisguised()) {
             if (this.level.getServer() != null && !(this.disguiselib$disguiseEntity instanceof LivingEntity) && !(this.disguiselib$entity instanceof Player))
                 this.level.getServer().getPlayerList().broadcastAll(
                         new ClientboundTeleportEntityPacket(
@@ -440,7 +439,7 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
             at = @At("TAIL")
     )
     private void toTag(ValueOutput tag, CallbackInfo ci) {
-        if (this.isDisguised()) {
+        if (this.disguiseLib$isDisguised()) {
             var disguiseTag = tag.child("DisguiseLib");
 
             disguiseTag.putString("DisguiseType", BuiltInRegistries.ENTITY_TYPE.getKey(this.disguiselib$disguiseType).toString());

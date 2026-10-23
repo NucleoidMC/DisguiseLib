@@ -9,7 +9,6 @@ import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,10 +16,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import xyz.nucleoid.disguiselib.api.DisguiseUtils;
 import xyz.nucleoid.disguiselib.api.EntityDisguise;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -35,7 +32,7 @@ public class ServerEntityMixin {
 
     @Inject(method = "sendPairingData", at = @At("TAIL"))
     private void sendEmptyPacketsToTriggerStuff(ServerPlayer player, Consumer<Packet<ClientGamePacketListener>> broadcast, CallbackInfo ci) {
-        if (((EntityDisguise) this.entity).isDisguised()) {
+        if (((EntityDisguise) this.entity).disguiseLib$isDisguised()) {
             if (this.trackedDataValues == null) {
                 broadcast.accept(new ClientboundSetEntityDataPacket(this.entity.getId(), List.of()));
             }
