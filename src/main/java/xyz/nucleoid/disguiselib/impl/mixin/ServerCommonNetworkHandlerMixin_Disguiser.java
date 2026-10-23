@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 
 import static xyz.nucleoid.disguiselib.impl.DisguiseLib.DISGUISE_TEAM;
 
-@Mixin(ServerCommonPacketListenerImpl.class)
+@Mixin(value = ServerCommonPacketListenerImpl.class, priority = 200)
 public abstract class ServerCommonNetworkHandlerMixin_Disguiser {
     @Shadow
     public abstract void send(Packet<?> packet);
@@ -46,10 +46,7 @@ public abstract class ServerCommonNetworkHandlerMixin_Disguiser {
      */
     @Inject(
             method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/network/Connection;send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;Z)V"
-            ),
+            at = @At("HEAD"),
             cancellable = true
     )
     private void disguiseEntity(Packet<? super ClientGamePacketListener> packet, ChannelFutureListener channelFutureListener, CallbackInfo ci) {
