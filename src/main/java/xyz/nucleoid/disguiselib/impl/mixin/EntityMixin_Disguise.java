@@ -423,8 +423,9 @@ public abstract class EntityMixin_Disguise implements EntityDisguise, DisguiseUt
                 this.disguiselib$constructFakePlayer(this.disguiselib$profile);
             } else {
                 var disguiseEntityTag = disguiseTag.get().child("DisguiseEntity");
-                if (disguiseEntityTag.isPresent())
-                    this.disguiselib$disguiseEntity = EntityType.loadEntityRecursive(disguiseEntityTag.get(), this.level, EntitySpawnReason.LOAD, (entityx) -> entityx);
+                if (disguiseEntityTag.isPresent()) {
+                    this.disguiselib$disguiseEntity = EntityType.loadEntityRecursive(disguiseEntityTag.get(), this.level, new EntitySpawnRequest(EntitySpawnReason.LOAD, true), (entityx) -> entityx);
+                }
             }
         }
     }
