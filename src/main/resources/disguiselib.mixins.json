@@ -6,6 +6,7 @@
   "mixins": [
     "EntityMixin_Disguise",
     "ServerCommonNetworkHandlerMixin_Disguiser",
+    "ServerEntityMixin",
     "ServerPlayNetworkHandlerMixin_Disguiser",
     "ServerPlayNetworkHandlerMixin_HitCheck",
     "V1460Mixin",
